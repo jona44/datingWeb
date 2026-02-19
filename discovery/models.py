@@ -23,6 +23,7 @@ class Preference(models.Model):
     
     # Location preferences
     pref_city = models.CharField(max_length=100, choices=CITY_CHOICES, blank=True, help_text="Preferred city")
+    pref_residence_country = models.CharField(max_length=100, choices=COUNTRY_CHOICES, blank=True, help_text="Preferred country of residence")
     
     # Lifestyle preferences
     pref_max_children = models.IntegerField(null=True, blank=True, help_text="Maximum number of children a partner has")

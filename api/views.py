@@ -180,7 +180,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = None
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['gender', 'city', 'nationality', 'ethnicity']
+    filterset_fields = ['gender', 'residence_country', 'city', 'nationality', 'ethnicity']
     search_fields = ['display_name', 'bio', 'hobbies']
     ordering_fields = ['created_at', 'last_seen']
     
@@ -212,34 +212,45 @@ class ProfileViewSet(viewsets.ModelViewSet):
         
         queryset = queryset.exclude(id__in=blocked_profile_ids)
         
-        # Apply preferences if they exist
-        if hasattr(current_profile, 'preferences'):
-            prefs = current_profile.preferences
-            
-            # Age filter
-            if prefs.min_age and prefs.max_age:
-                today = date.today()
-                min_birth_date = today.replace(year=today.year - prefs.max_age)
-                max_birth_date = today.replace(year=today.year - prefs.min_age)
-                queryset = queryset.filter(
-                    birth_date__range=[min_birth_date, max_birth_date]
-                )
-            
-            # Gender filter
-            if prefs.interested_in and prefs.interested_in != 'all':
-                queryset = queryset.filter(gender=prefs.interested_in)
-            
-            # City filter
-            if prefs.pref_city:
-                queryset = queryset.filter(city=prefs.pref_city)
-            
-            # Nationality filter
-            if prefs.pref_nationality:
-                queryset = queryset.filter(nationality=prefs.pref_nationality)
-            
-            # Ethnicity filter
-            if prefs.pref_ethnicity and prefs.pref_ethnicity != 'any':
-                queryset = queryset.filter(ethnicity=prefs.pref_ethnicity)
+        # Only apply restrictive discovery filters for 'discovery' and 'list' actions
+        # This prevents 404s when retrieving a specific profile that doesn't match current discovery prefs
+        if self.action in ['discovery', 'list']:
+            # Filter by app variant to keep communities separate in discovery
+            if current_profile.app_variant:
+                queryset = queryset.filter(app_variant=current_profile.app_variant)
+
+            # Apply preferences if they exist
+            if hasattr(current_profile, 'preferences'):
+                prefs = current_profile.preferences
+                
+                # Age filter
+                if prefs.min_age and prefs.max_age:
+                    today = date.today()
+                    min_birth_date = today.replace(year=today.year - prefs.max_age)
+                    max_birth_date = today.replace(year=today.year - prefs.min_age)
+                    queryset = queryset.filter(
+                        birth_date__range=[min_birth_date, max_birth_date]
+                    )
+                
+                # Gender filter
+                if prefs.interested_in and prefs.interested_in != 'all':
+                    queryset = queryset.filter(gender=prefs.interested_in)
+                
+                # City filter
+                if prefs.pref_city:
+                    queryset = queryset.filter(city=prefs.pref_city)
+                
+                # Residence Country filter
+                if prefs.pref_residence_country:
+                    queryset = queryset.filter(residence_country=prefs.pref_residence_country)
+                
+                # Nationality filter
+                if prefs.pref_nationality:
+                    queryset = queryset.filter(nationality=prefs.pref_nationality)
+                
+                # Ethnicity filter
+                if prefs.pref_ethnicity and prefs.pref_ethnicity != 'any':
+                    queryset = queryset.filter(ethnicity=prefs.pref_ethnicity)
         
         return queryset
     

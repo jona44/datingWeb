@@ -371,6 +371,30 @@
         }
     });
 
+    // Multi-photo preview for additional photos
+    document.getElementById('id_additional_photos').addEventListener('change', function(e) {
+        const previewContainer = document.querySelector('.flex.flex-wrap.gap-4.mb-4');
+        const files = Array.from(this.files);
+        
+        // Find existing non-preview photos (those already on server)
+        // If we want to CLEAR and show only new, we'd do that, but usually better to append "Preview" indicators
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const div = document.createElement('div');
+                div.className = "relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 border-2 border-pink-500 shadow-sm opacity-75";
+                div.innerHTML = `
+                    <img src="${event.target.result}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
+                        <span class="text-[10px] text-white font-bold uppercase tracking-tighter">New</span>
+                    </div>
+                `;
+                previewContainer.appendChild(div);
+            }
+            reader.readAsDataURL(file);
+        });
+    });
+
     function editProfileData() {
         // Parse the JSON data passed from the view
         let geoData = {};

@@ -137,6 +137,16 @@ class Profile(models.Model):
     disclosure_comfort = models.CharField(max_length=30, choices=DISCLOSURE_CHOICES, blank=True)
     
     # Profile Status
+    APP_VARIANT_CHOICES = [
+        ('hiv_plus', 'HIV+ Community'),
+        ('general', 'Diverse Hearts'),
+    ]
+    app_variant = models.CharField(
+        max_length=20, 
+        choices=APP_VARIANT_CHOICES, 
+        default='hiv_plus',
+        help_text="The app variant this profile belongs to"
+    )
     is_visible = models.BooleanField(default=True)
     is_verified = models.BooleanField(default=False)
     is_complete = models.BooleanField(default=False)
@@ -164,7 +174,8 @@ class Profile(models.Model):
         """Calculate profile completion percentage"""
         core_fields = [
             self.display_name, self.bio, self.birth_date, self.gender, 
-            self.city, self.nationality, self.profile_picture, self.location
+            self.residence_country, self.city, self.nationality, 
+            self.profile_picture, self.location
         ]
         lifestyle_fields = [
             self.education_level, self.employment_status, 

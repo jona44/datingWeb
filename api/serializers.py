@@ -165,12 +165,12 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'display_name', 'bio', 'birth_date', 'age',
             'profile_picture', 'profile_picture_url', 'gender',
-            'location', 'city', 'nationality', 'ethnicity',
+            'location', 'residence_country', 'city', 'nationality', 'ethnicity',
             'employment_status', 'education_level',
             'children_status', 'children_count',
             'hobbies', 'height', 'smoking', 'drinking',
             'diagnosis_year', 'treatment_status', 'support_seeking',
-            'disclosure_comfort', 'is_visible', 'is_verified',
+            'disclosure_comfort', 'app_variant', 'is_visible', 'is_verified',
             'is_complete', 'onboarding_step', 'profile_completeness',
             'photos', 'all_photo_urls', 'created_at', 'last_seen',
             'matches_count'
@@ -226,12 +226,12 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         model = Profile
         fields = [
             'display_name', 'bio', 'birth_date',
-            'profile_picture', 'gender', 'location', 'city',
+            'profile_picture', 'gender', 'location', 'residence_country', 'city',
             'nationality', 'ethnicity', 'employment_status',
             'education_level', 'children_status', 'children_count',
             'hobbies', 'height', 'smoking', 'drinking',
             'diagnosis_year', 'treatment_status', 'support_seeking',
-            'disclosure_comfort', 'is_visible', 'onboarding_step', 'is_complete'
+            'disclosure_comfort', 'app_variant', 'is_visible', 'onboarding_step', 'is_complete'
         ]
 
 
@@ -243,7 +243,7 @@ class PreferenceSerializer(serializers.ModelSerializer):
         model = Preference
         fields = [
             'id', 'min_age', 'max_age', 'interested_in',
-            'pref_city', 'pref_max_children', 'pref_nationality',
+            'pref_city', 'pref_residence_country', 'pref_max_children', 'pref_nationality',
             'pref_ethnicity', 'show_me', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']

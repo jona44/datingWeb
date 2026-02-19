@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Dating App{% endblock %}</title>
+    <title>{% block title %}{{ brand_name }}{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 
     {% load tailwind_tags %}
@@ -84,18 +84,18 @@
 
     <footer class="fixed bottom-0 left-0 right-0 bg-white border-t py-6 z-40">
         <div class="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs sm:text-sm text-gray-500">
-            <p>© {{ now|date:"Y" }} Dating App</p>
+            <p>© {{ now|date:"Y" }} {{ brand_name }}</p>
             <div class="flex gap-6">
                 <button hx-get="{% url 'help' %}" 
                         hx-target="main" 
                         hx-swap="innerHTML"
                         hx-select="#page-content" 
                         hx-push-url="true"
-                        class="hover:text-pink-600 transition font-medium cursor-pointer">
+                        class="hover:text-{{ brand_primary }} transition font-medium cursor-pointer">
                     Help & FAQ
                 </button>
-                <a href="{% url 'privacy_policy' %}" class="hover:text-pink-600 transition font-medium">Privacy Policy</a>
-                <a href="{% url 'terms' %}" class="hover:text-pink-600 transition font-medium">Terms</a>
+                <a href="{% url 'privacy_policy' %}" class="hover:text-{{ brand_primary }} transition font-medium">Privacy Policy</a>
+                <a href="{% url 'terms' %}" class="hover:text-{{ brand_primary }} transition font-medium">Terms</a>
             </div>
         </div>
     </footer>

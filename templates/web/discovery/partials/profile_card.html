@@ -23,7 +23,7 @@
         
         <!-- No Photos Fallback -->
         <template x-if="slides.length === 0">
-            <div class="w-full h-full flex items-center justify-center text-white text-6xl bg-gradient-to-br from-pink-400 to-purple-500">
+            <div class="w-full h-full flex items-center justify-center text-white text-6xl bg-gradient-to-br {{ brand_gradient }}">
                 👤
             </div>
         </template>
@@ -109,7 +109,7 @@
                 hx-post="{% url 'like_profile' profile.id %}?source=card"
                 hx-target="#profile-card-{{ profile.id }}"
                 hx-swap="outerHTML"
-                class="flex-1 px-4 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-bold hover:from-pink-700 hover:to-purple-700 transition shadow-lg flex items-center justify-center gap-2">
+                class="flex-1 px-4 py-3 bg-gradient-to-r {{ brand_gradient }} text-white rounded-xl font-bold hover:opacity-90 transition shadow-lg flex items-center justify-center gap-2">
                 <span>❤️</span> Like
             </button>
             {% endif %}

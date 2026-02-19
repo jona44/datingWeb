@@ -1,9 +1,9 @@
 {% load static %}
 <nav class="bg-white border-b sticky top-0 z-50 shadow-sm">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-        <a href="/" class="flex items-center gap-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+        <a href="/" class="flex items-center gap-2 text-xl sm:text-2xl font-bold bg-gradient-to-r {{ brand_gradient }} bg-clip-text text-transparent">
             <img src="{% static 'images/favicon.png' %}" alt="Logo" class="w-8 h-8 sm:w-10 sm:h-10 object-contain">
-            DatingApp
+            {{ brand_name }}
         </a>
 
         <div class="flex items-center gap-2 sm:gap-4">
@@ -14,7 +14,7 @@
                         hx-select="#page-content" 
                         hx-push-url="true"
                         class="flex items-center gap-2 hover:bg-gray-100 px-2 py-1 rounded-xl transition">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 overflow-hidden border border-white shadow-sm">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br {{ brand_gradient }} overflow-hidden border border-white shadow-sm">
                         {% if user.profile.profile_picture %}
                             <img src="{{ user.profile.profile_picture.url }}" class="w-full h-full object-cover">
                         {% else %}
@@ -82,7 +82,7 @@
                     Login
                 </a>
                 <a href="{% url 'signup' %}"
-                   class="text-sm bg-gradient-to-r from-pink-600 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:from-pink-700 hover:to-purple-700 transition">
+                   class="text-sm bg-gradient-to-r {{ brand_gradient }} text-white px-4 py-2 rounded-lg font-medium hover:opacity-90 transition">
                     Sign up
                 </a>
             {% endif %}
