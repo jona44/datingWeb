@@ -46,7 +46,17 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                  attrs['username'] = identifier
         
         try:
-            return super().validate(attrs)
+            data = super().validate(attrs)
+            
+            # Enforce App Variant Isolation
+            request = self.context.get('request')
+            if request and hasattr(self.user, 'profile'):
+                import os
+                req_variant = getattr(request, 'app_variant', os.getenv('APP_VARIANT', 'hiv_plus'))
+                if self.user.profile.app_variant and self.user.profile.app_variant != req_variant:
+                    raise serializers.ValidationError("Account registered for a different community variant.")
+                    
+            return data
         except Exception as e:
             # Only print error in development for debugging
             from django.conf import settings

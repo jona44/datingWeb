@@ -140,8 +140,13 @@ def login_view(request):
         user = authenticate(request, username=email, password=password)
 
         if user:
-            login(request, user)
-            return redirect("home")
+            import os
+            req_variant = getattr(request, 'app_variant', os.getenv('APP_VARIANT', 'hiv_plus'))
+            if hasattr(user, 'profile') and user.profile.app_variant and user.profile.app_variant != req_variant:
+                messages.error(request, "Account registered for a different community variant.")
+            else:
+                login(request, user)
+                return redirect("home")
         else:
             messages.error(request, "Invalid email or password")
 

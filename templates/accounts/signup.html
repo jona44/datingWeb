@@ -9,8 +9,8 @@
         <div class="bg-white rounded-4xl shadow-xl p-8">
             <!-- Logo/Brand -->
             <div class="text-center mb-8">
-                <div class="inline-block p-3 rounded-2xl bg-gradient-to-br from-pink-50 to-purple-50 shadow-inner mb-4">
-                    <img src="{% static 'images/favicon.png' %}" alt="Logo" class="w-16 h-16 object-contain mx-auto">
+                <div class="inline-block p-3 rounded-2xl bg-gradient-to-br {{ brand_gradient }} opacity-90 shadow-inner mb-4">
+                    <img src="{% static brand_logo %}" alt="Logo" class="w-16 h-16 object-contain mx-auto">
                 </div>
                 <h1 class="text-3xl font-bold text-gray-900">Create Account</h1>
                 <p class="text-gray-600 mt-2">Sign up to get started</p>
@@ -63,7 +63,7 @@
                     {% endif %}
                 </div>
 
-                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
+                <button type="submit" class="w-full bg-gradient-to-r {{ brand_gradient }} text-white font-semibold py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-{{ brand_primary }} focus:ring-offset-2 transition-all duration-200">
                     Create Account
                 </button>
             </form>
@@ -102,7 +102,7 @@
             <!-- Sign In Link -->
             <p class="text-center text-sm text-gray-600">
                 Already have an account? 
-                <a href="{% url 'login' %}" class="text-blue-600 hover:text-blue-700 font-medium">Sign in</a>
+                <a href="{% url 'login' %}" class="text-{{ brand_primary }} hover:text-{{ brand_primary_hover }} font-medium">Sign in</a>
             </p>
         </div>
 

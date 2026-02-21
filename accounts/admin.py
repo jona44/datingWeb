@@ -32,8 +32,8 @@ class ProfilePhotoInline(admin.TabularInline):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('display_name', 'user_email', 'is_complete', 'onboarding_step', 'created_at')
-    list_filter = ('is_complete', 'gender', 'treatment_status', 'is_verified')
+    list_display = ('display_name', 'user_email', 'app_variant', 'is_complete', 'onboarding_step', 'created_at')
+    list_filter = ('app_variant', 'is_complete', 'gender', 'treatment_status', 'is_verified')
     search_fields = ('display_name', 'user__email', 'city')
     inlines = [ProfilePhotoInline]
     

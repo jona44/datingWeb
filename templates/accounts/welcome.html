@@ -7,9 +7,9 @@
 <div class="max-w-3xl mx-auto py-12 px-4">
   <div class="text-center mb-12">
     <div class="inline-block p-4 rounded-3xl bg-white shadow-xl mb-6 transform -rotate-3 hover:rotate-0 transition duration-300">
-        <img src="{% static 'images/favicon.png' %}" alt="Logo" class="w-24 h-24 object-contain mx-auto">
+        <img src="{% static brand_logo %}" alt="Logo" class="w-24 h-24 object-contain mx-auto">
     </div>
-    <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+    <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r {{ brand_gradient }} bg-clip-text text-transparent">
       Welcome to Our Community
     </h1>
     <p class="text-xl text-gray-600">
@@ -25,9 +25,9 @@
         We understand that living with HIV comes with unique challenges, especially when it comes to dating and relationships. This platform was created specifically for people like you—to build a community where you can be yourself without fear of judgment.
       </p>
 
-      <div class="bg-pink-50 border-l-4 border-pink-500 p-4 rounded">
-        <h3 class="font-semibold text-pink-900 mb-2">Our Promise to You</h3>
-        <ul class="space-y-2 text-pink-800">
+      <div class="bg-gray-50 border-l-4 border-{{ brand_primary }} p-4 rounded">
+        <h3 class="font-semibold text-{{ brand_primary }} mb-2">Our Promise to You</h3>
+        <ul class="space-y-2 text-gray-800">
           <li>✓ A safe and supportive environment</li>
           <li>✓ Your privacy is our top priority</li>
           <li>✓ No judgment, only understanding</li>
@@ -70,7 +70,7 @@
 
   <div class="text-center">
     <a href="{% url 'onboarding_step' 1 %}" 
-       class="inline-block px-8 py-4 bg-gradient-to-r from-pink-600 to-purple-600 text-white text-lg font-semibold rounded-xl hover:from-pink-700 hover:to-purple-700 transition shadow-lg">
+       class="inline-block px-8 py-4 bg-gradient-to-r {{ brand_gradient }} text-white text-lg font-semibold rounded-xl hover:opacity-90 transition shadow-lg">
       Let's Get Started →
     </a>
     <p class="text-sm text-gray-500 mt-4">

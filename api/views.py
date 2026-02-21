@@ -61,6 +61,12 @@ def register_user(request):
     
     user = serializer.save()
     
+    # Ensure profile matches the domain variant
+    if hasattr(user, 'profile'):
+        import os
+        user.profile.app_variant = getattr(request, 'app_variant', os.getenv('APP_VARIANT', 'hiv_plus'))
+        user.profile.save()
+    
     # Create refresh and access tokens
     refresh = RefreshToken.for_user(user)
     
@@ -151,7 +157,16 @@ class SocialLoginView(APIView):
                 user.save()
                 
                 # Create profile if not exists
-                Profile.objects.get_or_create(user=user, defaults={'display_name': first_name or email.split('@')[0]})
+                profile, _ = Profile.objects.get_or_create(user=user, defaults={'display_name': first_name or email.split('@')[0]})
+                import os
+                profile.app_variant = getattr(request, 'app_variant', os.getenv('APP_VARIANT', 'hiv_plus'))
+                profile.save()
+            else:
+                # User already exists, enforce variant check
+                import os
+                req_variant = getattr(request, 'app_variant', os.getenv('APP_VARIANT', 'hiv_plus'))
+                if hasattr(user, 'profile') and user.profile.app_variant and user.profile.app_variant != req_variant:
+                    return Response({'error': 'Account registered for a different community variant.'}, status=status.HTTP_403_FORBIDDEN)
 
             # Generate tokens
             refresh = RefreshToken.for_user(user)
@@ -366,7 +381,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
         current_profile = request.user.profile
         
         liked_by = Like.objects.filter(
-            to_profile=current_profile
+            to_profile=current_profile,
+            from_profile__app_variant=current_profile.app_variant
         ).select_related('from_profile').order_by('-created_at')
         
         profiles = [like.from_profile for like in liked_by]
@@ -384,7 +400,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
         
         # Get unique viewers
         views = ProfileView.objects.filter(
-            viewed=current_profile
+            viewed=current_profile,
+            viewer__app_variant=current_profile.app_variant
         ).select_related('viewer').order_by('-created_at')
         
         # Get unique profiles (latest view only)
@@ -573,9 +590,15 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         if hasattr(self.request.user, 'profile'):
             current_profile = self.request.user.profile
-            return Match.objects.filter(
+            matches = Match.objects.filter(
                 Q(profile1=current_profile) | Q(profile2=current_profile)
-            ).select_related('profile1', 'profile2').order_by('-created_at')
+            )
+            if current_profile.app_variant:
+                matches = matches.filter(
+                    profile1__app_variant=current_profile.app_variant,
+                    profile2__app_variant=current_profile.app_variant
+                )
+            return matches.select_related('profile1', 'profile2').order_by('-created_at')
         return Match.objects.none()
 
 

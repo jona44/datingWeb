@@ -20,7 +20,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key-for-dev')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS').split(',')] if os.getenv('ALLOWED_HOSTS') else ['localhost', '127.0.0.1', '192.168.88.252', '192.168.88.244', '*']
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS').split(',')] if os.getenv('ALLOWED_HOSTS') else ['localhost', '127.0.0.1', '192.168.88.252', '192.168.88.244', 'hivplus.local', 'diversehearts.local', '*']
 
 
 # Application definition
@@ -72,6 +72,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'web.middleware.VariantMiddleware',
     "accounts.middleware.LastSeenMiddleware",
     "accounts.middleware.ProfileCompletionMiddleware",
     'django.contrib.messages.middleware.MessageMiddleware',

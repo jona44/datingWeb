@@ -55,6 +55,9 @@ def get_discovery_profiles(for_profile, limit=10):
         )
     )
 
+    if for_profile.app_variant:
+        queryset = queryset.filter(app_variant=for_profile.app_variant)
+
     # Filter by age if birth_date is set
     if prefs.min_age and prefs.max_age:
         today = timezone.now().date()
@@ -103,6 +106,8 @@ def search_profiles(query, for_profile=None):
     # Exclude self if for_profile is provided
     if for_profile:
         queryset = queryset.exclude(id=for_profile.id)
+        if for_profile.app_variant:
+            queryset = queryset.filter(app_variant=for_profile.app_variant)
     
     # Search across multiple fields
     if query:

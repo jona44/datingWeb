@@ -145,6 +145,14 @@ def inbox(request):
     ) | Match.objects.filter(
         profile2=profile
     )
+    
+    # Since profile belongs to one variant, any match involving it should inherently be the same variant. 
+    # But for extra safety on older data:
+    if profile.app_variant:
+        matches = matches.filter(
+            models.Q(profile1__app_variant=profile.app_variant) & 
+            models.Q(profile2__app_variant=profile.app_variant)
+        )
 
     matches = matches.order_by("-created_at")
 
@@ -391,8 +399,11 @@ def activity_view(request):
     if profile.id in matched_set:
         matched_set.remove(profile.id)
         
-    # Filter likers to exclude those already matched
-    likers = Profile.objects.filter(id__in=likers_ids).exclude(id__in=matched_set).distinct()
+    # Filter likers to exclude those already matched & enforce variant
+    likers = Profile.objects.filter(id__in=likers_ids).exclude(id__in=matched_set)
+    if profile.app_variant:
+        likers = likers.filter(app_variant=profile.app_variant)
+    likers = likers.distinct()
     
     # 2. Who recently viewed me
     # Group by viewer and get the most recent view time
@@ -401,7 +412,10 @@ def activity_view(request):
     ).order_by('-last_view')[:50]
     
     visitor_ids = [v['viewer'] for v in recent_visitors]
-    visitors = {p.id: p for p in Profile.objects.filter(id__in=visitor_ids)}
+    visitors_qs = Profile.objects.filter(id__in=visitor_ids)
+    if profile.app_variant:
+        visitors_qs = visitors_qs.filter(app_variant=profile.app_variant)
+    visitors = {p.id: p for p in visitors_qs}
     
     # Build list of visitors with timestamp
     visitor_list = []
