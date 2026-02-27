@@ -9,19 +9,21 @@
     <div class="w-full md:w-64 bg-gray-50 p-6 border-r">
       <h2 class="font-bold text-gray-500 uppercase text-xs tracking-wider mb-6">Profile Settings</h2>
       <nav class="space-y-2">
-        <button @click="section = 'basic'" :class="section === 'basic' ? 'bg-pink-100 text-pink-700' : 'text-gray-600 hover:bg-gray-100'" class="w-full text-left px-4 py-2 rounded-xl transition font-medium">
+        <button @click="section = 'basic'" :class="section === 'basic' ? 'bg-{{ brand_primary }}/10 text-{{ brand_primary }} font-bold' : 'text-gray-600 hover:bg-gray-100'" class="w-full text-left px-4 py-2 rounded-xl transition font-medium">
           ✨ Basic Info
         </button>
-        <button @click="section = 'personal'" :class="section === 'personal' ? 'bg-pink-100 text-pink-700' : 'text-gray-600 hover:bg-gray-100'" class="w-full text-left px-4 py-2 rounded-xl transition font-medium">
+        <button @click="section = 'personal'" :class="section === 'personal' ? 'bg-{{ brand_primary }}/10 text-{{ brand_primary }} font-bold' : 'text-gray-600 hover:bg-gray-100'" class="w-full text-left px-4 py-2 rounded-xl transition font-medium">
           👤 Personal Details
         </button>
-        <button @click="section = 'lifestyle'" :class="section === 'lifestyle' ? 'bg-pink-100 text-pink-700' : 'text-gray-600 hover:bg-gray-100'" class="w-full text-left px-4 py-2 rounded-xl transition font-medium">
+        <button @click="section = 'lifestyle'" :class="section === 'lifestyle' ? 'bg-{{ brand_primary }}/10 text-{{ brand_primary }} font-bold' : 'text-gray-600 hover:bg-gray-100'" class="w-full text-left px-4 py-2 rounded-xl transition font-medium">
           🥂 Lifestyle
         </button>
-        <button @click="section = 'health'" :class="section === 'health' ? 'bg-pink-100 text-pink-700' : 'text-gray-600 hover:bg-gray-100'" class="w-full text-left px-4 py-2 rounded-xl transition font-medium">
+        {% if app_variant != 'general' %}
+        <button @click="section = 'health'" :class="section === 'health' ? 'bg-{{ brand_primary }}/10 text-{{ brand_primary }} font-bold' : 'text-gray-600 hover:bg-gray-100'" class="w-full text-left px-4 py-2 rounded-xl transition font-medium">
           🤝 Health Journey
         </button>
-        <button @click="section = 'preferences'" :class="section === 'preferences' ? 'bg-pink-100 text-pink-700' : 'text-gray-600 hover:bg-gray-100'" class="w-full text-left px-4 py-2 rounded-xl transition font-medium">
+        {% endif %}
+        <button @click="section = 'preferences'" :class="section === 'preferences' ? 'bg-{{ brand_primary }}/10 text-{{ brand_primary }} font-bold' : 'text-gray-600 hover:bg-gray-100'" class="w-full text-left px-4 py-2 rounded-xl transition font-medium">
           🔥 Match Preferences
         </button>
       </nav>
@@ -88,7 +90,7 @@
             </div>
 
             <div class="relative">
-                <input type="file" name="additional_photos" id="id_additional_photos" multiple accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 transition"/>
+                <input type="file" name="additional_photos" id="id_additional_photos" multiple accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-{{ brand_primary }}/10 file:text-{{ brand_primary }} hover:file:opacity-80 transition"/>
                 <p class="text-xs text-gray-500 mt-1">Upload unlimited photos to show your life.</p>
             </div>
           </div>
@@ -113,7 +115,7 @@
                 <select name="residence_country" 
                         x-model="selectedCountry" 
                         @change="onCountryChange()"
-                        class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-pink-500">
+                        class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-{{ brand_primary }}">
                     {% for val, label in form.fields.residence_country.choices %}
                     <option value="{{ val }}">{{ label }}</option>
                     {% endfor %}
@@ -127,7 +129,7 @@
                 </label>
                 <select name="city" 
                         x-model="selectedCity"
-                        class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-pink-500">
+                        class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-{{ brand_primary }}">
                     <option value="">Select City</option>
                     <template x-for="(city, index) in availableCities" :key="index">
                         <option :value="city" x-text="city" :selected="city == selectedCity"></option>
@@ -175,27 +177,25 @@
             <label class="block text-sm font-semibold text-gray-700 mb-3">{{ form.hobbies.label }}</label>
             <style>
               .hobby-label-card input[type="checkbox"] {
-                  width: 1.15rem;
-                  height: 1.15rem;
-                  color: #db2777;
+                  color: {{ brand_primary_hex }};
                   border-radius: 0.375rem;
                   border-color: #d1d5db;
                   cursor: pointer;
               }
               .hobby-label-card:has(input:checked) {
-                  border-color: #db2777;
-                  background-color: #fff1f2;
+                  border-color: {{ brand_primary_hex }};
+                  background-color: {{ brand_primary_hex }}15;
               }
               .hobby-label-card:has(input:checked) span {
-                  color: #be185d;
+                  color: {{ brand_primary_hex }};
                   font-weight: 600;
               }
             </style>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
               {% for choice in form.hobbies %}
-              <label class="hobby-label-card relative flex items-center p-3 border rounded-xl cursor-pointer transition group hover:border-pink-300 hover:bg-pink-50/50">
+              <label class="hobby-label-card relative flex items-center p-3 border rounded-xl cursor-pointer transition group hover:border-{{ brand_primary }}/40 hover:bg-{{ brand_primary }}/5">
                   {{ choice.tag }}
-                  <span class="ml-2 text-sm text-gray-600 group-hover:text-pink-600 transition">{{ choice.choice_label }}</span>
+                  <span class="ml-2 text-sm text-gray-600 group-hover:text-{{ brand_primary }} transition">{{ choice.choice_label }}</span>
               </label>
               {% endfor %}
             </div>
@@ -222,10 +222,11 @@
         </div>
 
         <!-- Health Section -->
+        {% if app_variant != 'general' %}
         <div x-show="section === 'health'" class="space-y-6 animate-fade-in">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-2xl font-bold">Health Journey</h3>
-            <span class="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-bold uppercase">Private & Optional</span>
+            <span class="px-3 py-1 bg-{{ brand_primary }}/10 text-{{ brand_primary }} rounded-full text-xs font-bold uppercase">Private & Optional</span>
           </div>
           
           <div class="bg-blue-50 p-4 rounded-xl mb-6">
@@ -286,7 +287,7 @@
                 <select name="pref_nationality" 
                         x-model="prefSelectedCountry" 
                         @change="onPrefCountryChange()"
-                        class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-pink-500">
+                        class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-{{ brand_primary }}">
                     {% for val, label in pref_form.fields.pref_nationality.choices %}
                     <option value="{{ val }}">{{ label }}</option>
                     {% endfor %}
@@ -300,7 +301,7 @@
                 </label>
                 <select name="pref_city" 
                         x-model="prefSelectedCity"
-                        class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-pink-500">
+                        class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-{{ brand_primary }}">
                     <option value="">Any</option>
                     <template x-for="(city, index) in prefAvailableCities" :key="index">
                         <option :value="city" x-text="city" :selected="city == prefSelectedCity"></option>
@@ -315,7 +316,7 @@
                 </label>
                 <select name="pref_ethnicity" 
                         x-model="prefSelectedEthnicity"
-                        class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-pink-500">
+                        class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-{{ brand_primary }}">
                     <option value="any">Any</option>
                     <template x-for="(eth, index) in prefAvailableEthnicities" :key="index">
                         <option :value="eth[0]" x-text="eth[1]" :selected="eth[0] == prefSelectedEthnicity"></option>
@@ -334,7 +335,7 @@
         </div>
 
         <div class="mt-12 pt-8 border-t flex flex-col sm:flex-row gap-4">
-          <button type="submit" class="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 text-white py-4 rounded-xl font-bold hover:from-pink-700 hover:to-purple-700 shadow-lg transition transform hover:-translate-y-0.5">
+          <button type="submit" class="flex-1 bg-gradient-to-r {{ brand_gradient }} text-white py-4 rounded-xl font-bold hover:opacity-90 shadow-lg transition transform hover:-translate-y-0.5">
             Update Profile
           </button>
           <button hx-get="{% url 'discovery_feed' %}"
@@ -382,7 +383,7 @@
             const reader = new FileReader();
             reader.onload = function(event) {
                 const div = document.createElement('div');
-                div.className = "relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 border-2 border-pink-500 shadow-sm opacity-75";
+                div.className = "relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 border-2 border-{{ brand_primary }} shadow-sm opacity-75";
                 div.innerHTML = `
                     <img src="${event.target.result}" class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-black/30 flex items-center justify-center">

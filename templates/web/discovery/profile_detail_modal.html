@@ -7,7 +7,7 @@
           <img src="{{ profile.profile_picture.url }}" alt="{{ profile.display_name }}" 
                class="w-32 h-32 rounded-2xl object-cover shadow-lg">
         {% else %}
-          <div class="w-32 h-32 rounded-2xl bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-6xl shadow-lg">
+          <div class="w-32 h-32 rounded-2xl bg-gradient-to-br {{ brand_gradient }} flex items-center justify-center text-6xl shadow-lg">
             👤
           </div>
         {% endif %}
@@ -51,7 +51,7 @@
             hx-post="{% url 'like_profile' profile.id %}?source=modal"
             hx-target="#profile-actions"
             hx-swap="innerHTML"
-            class="px-6 py-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-bold hover:from-pink-700 hover:to-purple-700 shadow-lg transition">
+            class="px-6 py-2 bg-gradient-to-r {{ brand_gradient }} text-white rounded-xl font-bold hover:opacity-90 shadow-lg transition">
             ❤️ Like
           </button>
           {% endif %}
@@ -75,7 +75,7 @@
         <h2 class="text-lg font-bold mb-2 text-gray-800">🎯 Interests</h2>
         <div class="flex flex-wrap gap-2">
           {% for hobby in profile.hobbies.split|slice:":15" %}
-            <span class="px-3 py-1 bg-pink-50 text-pink-700 rounded-full text-sm font-semibold border border-pink-100">
+            <span class="px-3 py-1 bg-{{ brand_primary }}/10 text-{{ brand_primary }} rounded-full text-sm font-semibold border border-{{ brand_primary }}/20">
               #{{ hobby }}
             </span>
           {% endfor %}

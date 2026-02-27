@@ -32,7 +32,7 @@
                            name="{{ form.email.name }}" 
                            id="{{ form.email.id_for_label }}" 
                            {% if form.email.value %}value="{{ form.email.value }}"{% endif %}
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 {% if form.email.errors %}border-red-500{% endif %}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-{{ brand_primary }} focus:border-transparent transition-all duration-200 {% if form.email.errors %}border-red-500{% endif %}"
                            placeholder="Enter your email address">
                     {% if form.email.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
@@ -44,7 +44,7 @@
                     <input type="password" 
                            name="{{ form.password1.name }}" 
                            id="{{ form.password1.id_for_label }}" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 {% if form.password1.errors %}border-red-500{% endif %}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-{{ brand_primary }} focus:border-transparent transition-all duration-200 {% if form.password1.errors %}border-red-500{% endif %}"
                            placeholder="Create a password">
                     {% if form.password1.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
@@ -56,7 +56,7 @@
                     <input type="password" 
                            name="{{ form.password2.name }}" 
                            id="{{ form.password2.id_for_label }}" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 {% if form.password2.errors %}border-red-500{% endif %}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-{{ brand_primary }} focus:border-transparent transition-all duration-200 {% if form.password2.errors %}border-red-500{% endif %}"
                            placeholder="Confirm your password">
                     {% if form.password2.errors %}
                         <p class="mt-1 text-sm text-red-600">{{ form.password2.errors.0 }}</p>

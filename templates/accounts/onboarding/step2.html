@@ -7,11 +7,11 @@
     <!-- Progress Bar -->
     <div class="mb-8">
         <div class="flex justify-between items-center mb-2">
-            <span class="text-sm font-medium text-pink-600">Step {{ step }} of {{ total_steps }}</span>
+            <span class="text-sm font-medium text-{{ brand_primary }}">Step {{ step }} of {{ total_steps }}</span>
             <span class="text-sm font-medium text-gray-500">{{ progress }}% Complete</span>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-2">
-            <div class="bg-gradient-to-r from-pink-500 to-purple-600 h-2 rounded-full transition-all duration-500" style="width: {{ progress }}%"></div>
+            <div class="bg-gradient-to-r {{ brand_gradient }} h-2 rounded-full transition-all duration-500" style="width: {{ progress }}%"></div>
         </div>
     </div>
 
@@ -25,7 +25,7 @@
             <!-- Nationality & Ethnicity Section -->
             <div class="pt-2 border-b border-gray-100 pb-8">
                 <h2 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                    <svg class="w-5 h-5 mr-3 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mr-3 text-{{ brand_primary }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h1.5a3 3 0 003-3V6.703a4 4 0 00-1.07-2.776l-1.43-1.43zM11 21v-3.5a2.5 2.5 0 012.5-2.5h0"></path>
                     </svg>
                     Nationality & Heritage
@@ -39,7 +39,7 @@
                         <select name="nationality" id="id_nationality" 
                                 x-model="selectedCountry" 
                                 @change="onCountryChange()"
-                                class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-pink-500">
+                                class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-{{ brand_primary }}">
                             {% for val, label in form.fields.nationality.choices %}
                             <option value="{{ val }}">{{ label }}</option>
                             {% endfor %}
@@ -54,7 +54,7 @@
                         </label>
                         <select name="ethnicity" id="id_ethnicity" 
                                 x-model="selectedEthnicity"
-                                class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-pink-500">
+                                class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-{{ brand_primary }}">
                             <option value="">Select Ethnicity</option>
                             <template x-for="(eth, index) in availableEthnicities" :key="index">
                                 <option :value="eth[0]" x-text="eth[1]"></option>
@@ -91,7 +91,7 @@
                         </label>
                         <select name="children_status" id="{{ form.children_status.id_for_label }}" 
                                 x-model="children_status"
-                                class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-pink-500">
+                                class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-{{ brand_primary }}">
                             {% for val, label in form.fields.children_status.choices %}
                             <option value="{{ val }}">{{ label }}</option>
                             {% endfor %}
@@ -133,25 +133,25 @@
                         .hobby-label-card input[type="checkbox"] {
                             width: 1.15rem;
                             height: 1.15rem;
-                            color: #db2777;
+                            color: {{ brand_primary_hex }};
                             border-radius: 0.375rem;
                             border-color: #d1d5db;
                             cursor: pointer;
                         }
                         .hobby-label-card:has(input:checked) {
-                            border-color: #db2777;
-                            background-color: #fff1f2;
+                            border-color: {{ brand_primary_hex }};
+                            background-color: {{ brand_primary_hex }}15;
                         }
                         .hobby-label-card:has(input:checked) span {
-                            color: #be185d;
+                            color: {{ brand_primary_hex }};
                             font-weight: 600;
                         }
                     </style>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {% for choice in form.hobbies %}
-                        <label class="hobby-label-card relative flex items-center p-3 border rounded-xl cursor-pointer transition group hover:border-pink-300 hover:bg-pink-50/50">
+                        <label class="hobby-label-card relative flex items-center p-3 border rounded-xl cursor-pointer transition group hover:opacity-80">
                             {{ choice.tag }}
-                            <span class="ml-2 text-sm text-gray-600 group-hover:text-pink-600 transition">{{ choice.choice_label }}</span>
+                            <span class="ml-2 text-sm text-gray-600 group-hover:text-{{ brand_primary }} transition">{{ choice.choice_label }}</span>
                         </label>
                         {% endfor %}
                     </div>
@@ -165,7 +165,7 @@
                 <a href="{% url 'onboarding_step' 1 %}" class="flex-1 py-4 text-center border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition transform hover:-translate-y-0.5">
                     ← Back
                 </a>
-                <button type="submit" class="flex-[2] py-4 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold rounded-xl hover:from-pink-700 hover:to-purple-700 transition shadow-lg transform hover:-translate-y-0.5 active:translate-y-0">
+                <button type="submit" class="flex-[2] py-4 bg-gradient-to-r {{ brand_gradient }} text-white font-bold rounded-xl hover:opacity-90 transition shadow-lg transform hover:-translate-y-0.5 active:translate-y-0">
                     Save & Continue →
                 </button>
             </div>

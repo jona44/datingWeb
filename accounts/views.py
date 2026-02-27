@@ -33,6 +33,14 @@ def onboarding_step_view(request, step):
     """Handle multi-step onboarding"""
     profile, _ = Profile.objects.get_or_create(user=request.user)
     
+    # Determine variant
+    import os
+    variant = getattr(request, 'app_variant', os.getenv('APP_VARIANT', 'hiv_plus'))
+    
+    # If general variant and trying to access step 3, redirect to step 4
+    if variant == 'general' and step == 3:
+        return redirect('onboarding_step', step=4)
+        
     # Define forms for each step
     forms_map = {
         1: OnboardingStep1Form,
@@ -68,7 +76,11 @@ def onboarding_step_view(request, step):
             
             # Navigate to next step or complete
             if step < 4:
-                return redirect('onboarding_step', step=step+1)
+                next_step = step + 1
+                # Skip step 3 for general variant
+                if variant == 'general' and next_step == 3:
+                    next_step = 4
+                return redirect('onboarding_step', step=next_step)
             else:
                 messages.success(request, 'Welcome! Your profile is complete.')
                 return redirect('discovery_feed')
@@ -78,11 +90,18 @@ def onboarding_step_view(request, step):
     # Clean geographic data for JSON (ensure keys matches dropdown values)
     clean_geo_data = {k.strip(): v for k, v in GEOGRAPHIC_DATA.items()}
     
+    # Adjust total steps and current display step for progress bar
+    total_steps = 4 if variant == 'hiv_plus' else 3
+    display_step = step
+    if variant == 'general' and step == 4:
+        display_step = 3
+        
     return render(request, f'accounts/onboarding/step{step}.html', {
         'form': form,
-        'step': step,
-        'total_steps': 4,
-        'progress': int((step / 4) * 100),
+        'step': display_step,
+        'actual_step': step,
+        'total_steps': total_steps,
+        'progress': int((display_step / total_steps) * 100),
         'geographic_data': json.dumps(clean_geo_data) if step in [1, 2] else "{}"
     })
 
@@ -169,6 +188,13 @@ def signup_view(request):
         form = SignupForm(request.POST)
         if form.is_valid():
             user = form.save()
+            
+            # Ensure the profile belongs to the correct app variant
+            if hasattr(user, 'profile'):
+                import os
+                user.profile.app_variant = getattr(request, 'app_variant', os.getenv('APP_VARIANT', 'hiv_plus'))
+                user.profile.save()
+                
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect("welcome")
     else:

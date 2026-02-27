@@ -10,10 +10,10 @@
         <img src="{% static brand_logo %}" alt="Logo" class="w-24 h-24 object-contain mx-auto">
     </div>
     <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r {{ brand_gradient }} bg-clip-text text-transparent">
-      Welcome to Our Community
+      Welcome to {{ brand_name }}
     </h1>
     <p class="text-xl text-gray-600">
-      A safe, supportive space for HIV-positive individuals to connect and find meaningful relationships
+      {{ brand_tagline }}
     </p>
   </div>
 
@@ -22,7 +22,7 @@
     
     <div class="space-y-6 text-gray-700">
       <p>
-        We understand that living with HIV comes with unique challenges, especially when it comes to dating and relationships. This platform was created specifically for people like you—to build a community where you can be yourself without fear of judgment.
+        {{ brand_about }}
       </p>
 
       <div class="bg-gray-50 border-l-4 border-{{ brand_primary }} p-4 rounded">
@@ -53,11 +53,13 @@
           <p class="text-sm text-gray-600">Share your interests and lifestyle</p>
         </div>
         
+        {% if app_variant != 'general' %}
         <div class="border rounded-lg p-4">
           <div class="text-2xl mb-2">🤝</div>
           <h4 class="font-semibold mb-1">Your Journey (Optional)</h4>
           <p class="text-sm text-gray-600">Share what you're comfortable with</p>
         </div>
+        {% endif %}
         
         <div class="border rounded-lg p-4">
           <div class="text-2xl mb-2">📸</div>

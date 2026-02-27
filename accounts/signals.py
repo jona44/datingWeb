@@ -9,7 +9,8 @@ import os
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.get_or_create(user=instance)
+        variant = os.getenv('APP_VARIANT', 'hiv_plus')
+        Profile.objects.get_or_create(user=instance, defaults={'app_variant': variant})
 
 @receiver(user_signed_up)
 def populate_profile_variant(request, user, **kwargs):

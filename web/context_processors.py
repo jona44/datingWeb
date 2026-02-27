@@ -16,6 +16,8 @@ def brand_context(request):
             'brand_primary_hex': '#FF0080',
             'brand_gradient': 'from-pink-600 to-purple-800',
             'brand_logo': 'images/hiv-icon.png',
+            'brand_tagline': 'A safe, supportive space for HIV-positive individuals to connect and find meaningful relationships',
+            'brand_about': 'We understand that living with HIV comes with unique challenges, especially when it comes to dating and relationships. This platform was created specifically for people like you—to build a community where you can be yourself without fear of judgment.',
         }
     else:
         return {
@@ -26,4 +28,6 @@ def brand_context(request):
             'brand_primary_hex': '#4F46E5',
             'brand_gradient': 'from-indigo-600 to-teal-800',
             'brand_logo': 'images/favicon.png',
+            'brand_tagline': 'A meaningful space for diverse souls to connect, share experiences, and find love',
+            'brand_about': 'Finding someone who truly resonates with your journey can be a path of its own. Diverse Hearts is dedicated to fostering deep connections in a respectful and inclusive environment, helping you find those who appreciate the real you.',
         }

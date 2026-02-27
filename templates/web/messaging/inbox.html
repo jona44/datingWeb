@@ -43,7 +43,7 @@
               
               <!-- Unread Badge -->
               {% if match.unread_count > 0 %}
-                <span class="bg-pink-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                <span class="bg-{{ brand_primary }} text-white text-xs font-bold px-2 py-1 rounded-full">
                   {{ match.unread_count }}
                 </span>
               {% endif %}
@@ -83,7 +83,7 @@
               hx-swap="innerHTML" 
               hx-select="#page-content"
               hx-push-url="true"
-              class="inline-block px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-lg font-semibold hover:from-pink-700 hover:to-purple-700 transition">
+              class="inline-block px-6 py-3 bg-gradient-to-r {{ brand_gradient }} text-white rounded-lg font-semibold hover:opacity-90 transition">
         Start Discovering
       </button>
     </div>

@@ -12,16 +12,18 @@ class VariantMiddleware:
     def __call__(self, request):
         host = request.get_host().lower()
         
-        # Determine variant based on domain name
-        # We check for 'diversehearts' or a specific local testing domain configured for it.
-        # Fallback to the environment variable or 'hiv_plus' otherwise.
-        
-        if 'diversehearts' in host or 'general' in host:
+        # 1. Check for explicit header sent by native mobile clients
+        #    (mobile apps can't rely on hostname detection since they connect via IP)
+        header_variant = request.headers.get('X-App-Variant', '').strip().lower()
+        if header_variant in ('hiv_plus', 'general'):
+            request.app_variant = header_variant
+        # 2. Determine variant based on domain name (for web browser clients)
+        elif 'diversehearts' in host or 'general' in host:
             request.app_variant = 'general'
         elif 'hivplus' in host:
             request.app_variant = 'hiv_plus'
         else:
-            # Fallback to default ENV if accessed via raw IP or standard localhost
+            # 3. Fallback to default ENV if accessed via raw IP or standard localhost
             request.app_variant = os.getenv('APP_VARIANT', 'hiv_plus')
 
         response = self.get_response(request)

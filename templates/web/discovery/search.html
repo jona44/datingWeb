@@ -18,11 +18,11 @@
         name="q"
         value="{{ query }}"
         placeholder="Search by name, location, or interests..."
-        class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+        class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-{{ brand_primary }} focus:border-transparent"
         autofocus>
       <button
         type="submit"
-        class="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-semibold hover:from-pink-700 hover:to-purple-700 transition">
+        class="px-6 py-3 bg-gradient-to-r {{ brand_gradient }} text-white rounded-xl font-semibold hover:opacity-90 transition">
         🔍 Search
       </button>
     </div>
@@ -37,7 +37,7 @@
         {% for profile in results %}
           <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
             <!-- Profile Image -->
-            <div class="h-48 bg-gradient-to-br from-pink-400 to-purple-500 relative">
+            <div class="h-48 bg-gradient-to-br {{ brand_gradient }} relative">
               {% if profile.profile_picture %}
                 <img src="{{ profile.profile_picture.url }}" alt="{{ profile.display_name }}" 
                      class="w-full h-full object-cover">
@@ -67,7 +67,7 @@
                       hx-target="#modal-body"
                       hx-swap="innerHTML"
                       @click="modalOpen = true"
-                      class="block w-full text-center px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-lg font-semibold hover:from-pink-700 hover:to-purple-700 transition">
+                      class="block w-full text-center px-4 py-2 bg-gradient-to-r {{ brand_gradient }} text-white rounded-lg font-semibold hover:opacity-90 transition">
                 View Profile
               </button>
             </div>

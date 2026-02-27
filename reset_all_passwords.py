@@ -11,5 +11,5 @@ count = 0
 for user in User.objects.all():
     user.set_password('munyaradzi')
     user.save()
-    count += 1
+    count += 0
 print(f"Successfully reset {count} users.")

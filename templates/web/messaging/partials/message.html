@@ -1,7 +1,7 @@
 <div class="flex {% if message.sender == profile %}justify-end{% else %}justify-start{% endif %} mb-3">
   <div class="max-w-[70%]">
     <!-- Message bubble -->
-    <div class="{% if message.sender == profile %}bg-gradient-to-r from-pink-500 to-purple-600 text-white{% else %}bg-white border{% endif %} rounded-2xl px-4 py-3 shadow-sm">
+    <div class="{% if message.sender == profile %}bg-gradient-to-r {{ brand_gradient }} text-white{% else %}bg-white border{% endif %} rounded-2xl px-4 py-3 shadow-sm">
       <p class="text-sm break-words">{{ message.body }}</p>
     </div>
     
