@@ -15,8 +15,8 @@ class VariantMiddleware:
         # 1. Check for explicit header sent by native mobile clients
         #    (mobile apps can't rely on hostname detection since they connect via IP)
         header_variant = request.headers.get('X-App-Variant', '').strip().lower()
-        if header_variant in ('hiv_plus', 'general'):
-            request.app_variant = header_variant
+        if header_variant in ('hiv_plus', 'general', 'diversehearts'):
+            request.app_variant = 'general' if header_variant == 'diversehearts' else header_variant
         # 2. Determine variant based on domain name (for web browser clients)
         elif 'diversehearts' in host or 'general' in host:
             request.app_variant = 'general'

@@ -103,3 +103,33 @@ class ProfilePhotoUploadTest(TestCase):
         # Verify photo count (2 from previous test if ran sequentially? No, TestCase cleans up DB)
         # But this is a separate test method.
         self.assertEqual(ProfilePhoto.objects.filter(profile=self.profile).count(), 1)
+
+
+class AppVariantCompatibilityTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='test_variant@example.com', password='password123')
+        self.profile, _ = Profile.objects.get_or_create(user=self.user)
+
+    def test_serializer_normalization(self):
+        """Test that ProfileUpdateSerializer maps 'diversehearts' to 'general'."""
+        from api.serializers import ProfileUpdateSerializer
+        data = {
+            'app_variant': 'diversehearts',
+            'display_name': 'Test Normalization'
+        }
+        serializer = ProfileUpdateSerializer(instance=self.profile, data=data, partial=True)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        profile = serializer.save()
+        self.assertEqual(profile.app_variant, 'general')
+
+    def test_middleware_normalization(self):
+        """Test that VariantMiddleware maps X-App-Variant: diversehearts header to general."""
+        from django.test import RequestFactory
+        from web.middleware import VariantMiddleware
+        factory = RequestFactory()
+        request = factory.get('/api/profiles/me/', HTTP_X_APP_VARIANT='diversehearts')
+        
+        middleware = VariantMiddleware(lambda req: req)
+        middleware(request)
+        
+        self.assertEqual(request.app_variant, 'general')

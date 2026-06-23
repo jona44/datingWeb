@@ -244,6 +244,15 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
             'disclosure_comfort', 'app_variant', 'is_visible', 'onboarding_step', 'is_complete'
         ]
 
+    def to_internal_value(self, data):
+        if hasattr(data, 'copy'):
+            data = data.copy()
+        else:
+            data = dict(data)
+        if 'app_variant' in data and data['app_variant'] == 'diversehearts':
+            data['app_variant'] = 'general'
+        return super().to_internal_value(data)
+
 
 # ==================== DISCOVERY SERIALIZERS ====================
 
