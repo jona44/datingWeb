@@ -91,10 +91,25 @@ class Migration(migrations.Migration):
             name='gender',
             field=models.CharField(blank=True, choices=[('male', 'Male'), ('female', 'Female'), ('non_binary', 'Non-binary'), ('other', 'Other')], max_length=20, null=True),
         ),
-        migrations.AlterField(
-            model_name='profile',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunSQL(
+                    sql=[
+                        'ALTER TABLE "accounts_profile" ALTER COLUMN "id" DROP IDENTITY IF EXISTS;',
+                        'ALTER TABLE "accounts_profile" ALTER COLUMN "id" TYPE uuid USING (lpad(to_hex("id"), 32, \'0\')::uuid);',
+                    ],
+                    reverse_sql=[
+                        'ALTER TABLE "accounts_profile" ALTER COLUMN "id" TYPE bigint;',
+                    ],
+                ),
+            ],
+            state_operations=[
+                migrations.AlterField(
+                    model_name='profile',
+                    name='id',
+                    field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
+                ),
+            ],
         ),
         migrations.AlterField(
             model_name='profile',

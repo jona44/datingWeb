@@ -46,10 +46,25 @@ class Migration(migrations.Migration):
             name='match',
             unique_together={('profile1', 'profile2')},
         ),
-        migrations.AlterField(
-            model_name='match',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunSQL(
+                    sql=[
+                        'ALTER TABLE "interactions_match" ALTER COLUMN "id" DROP IDENTITY IF EXISTS;',
+                        'ALTER TABLE "interactions_match" ALTER COLUMN "id" TYPE uuid USING (lpad(to_hex("id"), 32, \'0\')::uuid);',
+                    ],
+                    reverse_sql=[
+                        'ALTER TABLE "interactions_match" ALTER COLUMN "id" TYPE bigint;',
+                    ],
+                ),
+            ],
+            state_operations=[
+                migrations.AlterField(
+                    model_name='match',
+                    name='id',
+                    field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
+                ),
+            ],
         ),
         migrations.RemoveField(
             model_name='like',
