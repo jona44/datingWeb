@@ -91,6 +91,7 @@
             </form>
 
 
+            {% if perms.socialaccount or request.user.is_authenticated %}
             <!-- Divider -->
             <div class="relative my-6">
                 <div class="absolute inset-0 flex items-center">
@@ -120,6 +121,7 @@
                     <span class="hidden sm:inline">Facebook</span>
                 </a>
             </div>
+            {% endif %}
 
             <!-- Sign In Link -->
             <p class="text-center text-sm text-gray-600">

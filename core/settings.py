@@ -18,10 +18,24 @@ load_dotenv(BASE_DIR / '.env')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key-for-dev')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS').split(',')] if os.getenv('ALLOWED_HOSTS') else ['localhost', '127.0.0.1', '192.168.88.252', '192.168.88.244', 'hivplus.local', 'diversehearts.local', '*']
+def get_bool_env(name, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = get_bool_env('DEBUG', False)
+
+allowed_hosts = os.getenv('ALLOWED_HOSTS', '')
+hosts = [h.strip() for h in allowed_hosts.split(',') if h.strip()] if allowed_hosts else []
+render_host = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if render_host:
+    hosts.append(render_host)
+
+ALLOWED_HOSTS = hosts or ['localhost', '127.0.0.1', '192.168.88.252', '192.168.88.244', 'hivplus.local', 'diversehearts.local', '*']
 
 
 # Application definition
@@ -169,7 +183,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
