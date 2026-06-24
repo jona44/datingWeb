@@ -6,11 +6,10 @@ import dj_database_url
 from dotenv import load_dotenv
 
 
-load_dotenv()
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -111,28 +110,28 @@ AUTHENTICATION_BACKENDS = [
 
 
 
-# Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-#         conn_max_age=600,
-#         conn_health_checks=True,
-#     )
-# }
+default_database_url = os.getenv('DATABASE_URL') or f"sqlite:///{(BASE_DIR / 'db.sqlite3').as_posix()}"
 
+if isinstance(default_database_url, bytes):
+    default_database_url = default_database_url.decode('utf-8', errors='ignore')
 
-import dj_database_url
-
-
-DATABASES = {
-    "default": dj_database_url.parse(
-        os.getenv('DATABASE_URL'),
-        conn_max_age=0,
-        conn_health_checks=True,
-    )
-}
+try:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            default_database_url,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+except Exception:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 
