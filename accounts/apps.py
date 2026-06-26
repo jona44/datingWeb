@@ -5,3 +5,6 @@ class AccountsConfig(AppConfig):
 
     def ready(self):
         import accounts.signals
+        from core.site_bootstrap import ensure_default_site
+
+        ensure_default_site()

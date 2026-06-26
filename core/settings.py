@@ -31,11 +31,42 @@ DEBUG = get_bool_env('DEBUG', False)
 
 allowed_hosts = os.getenv('ALLOWED_HOSTS', '')
 hosts = [h.strip() for h in allowed_hosts.split(',') if h.strip()] if allowed_hosts else []
-render_host = os.getenv('RENDER_EXTERNAL_HOSTNAME')
-if render_host:
-    hosts.append(render_host)
 
-ALLOWED_HOSTS = hosts or ['localhost', '127.0.0.1', '192.168.88.252', '192.168.88.244', 'hivplus.local', 'diversehearts.local', '*']
+for host in [
+    os.getenv('RAILWAY_PUBLIC_DOMAIN'),
+    os.getenv('RAILWAY_PRIVATE_DOMAIN'),
+]:
+    if host:
+        hosts.append(host)
+
+LOCAL_ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '192.168.88.252',
+    '192.168.88.244',
+    'hivplus.local',
+    'diversehearts.local',
+]
+
+ALLOWED_HOSTS = hosts or LOCAL_ALLOWED_HOSTS
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://192.168.88.252:8000",
+    "http://192.168.88.244:8000",
+]
+CSRF_TRUSTED_ORIGINS.extend(
+    item.strip()
+    for item in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
+    if item.strip()
+)
+
+railway_public_domain = os.getenv('RAILWAY_PUBLIC_DOMAIN')
+if railway_public_domain:
+    CSRF_TRUSTED_ORIGINS.extend([
+        f'https://{railway_public_domain}',
+    ])
 
 
 # Application definition
@@ -345,12 +376,4 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
-
-# CSRF Settings
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://192.168.88.252:8000",
-    "http://192.168.88.244:8000",
-]
 
