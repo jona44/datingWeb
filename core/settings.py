@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import os
+from urllib.parse import quote_plus
 import dj_database_url
 from dotenv import load_dotenv
 
@@ -155,9 +156,29 @@ AUTHENTICATION_BACKENDS = [
 
 
 
+def get_database_url():
+    database_url = os.getenv('DATABASE_URL')
+    if database_url:
+        return database_url
+
+    pg_host = os.getenv('PGHOST')
+    pg_port = os.getenv('PGPORT')
+    pg_database = os.getenv('PGDATABASE')
+    pg_user = os.getenv('PGUSER')
+    pg_password = os.getenv('PGPASSWORD')
+
+    if all([pg_host, pg_port, pg_database, pg_user, pg_password]):
+        return (
+            f"postgresql://{quote_plus(pg_user)}:{quote_plus(pg_password)}"
+            f"@{pg_host}:{pg_port}/{quote_plus(pg_database)}"
+        )
+
+    return f"sqlite:///{(BASE_DIR / 'db.sqlite3').as_posix()}"
+
+
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-default_database_url = os.getenv('DATABASE_URL') or f"sqlite:///{(BASE_DIR / 'db.sqlite3').as_posix()}"
+default_database_url = get_database_url()
 
 if isinstance(default_database_url, bytes):
     default_database_url = default_database_url.decode('utf-8', errors='ignore')

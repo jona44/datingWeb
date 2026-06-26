@@ -3,7 +3,7 @@ from django.contrib.sites.models import Site
 from django.db import DatabaseError, OperationalError, connection
 
 
-def ensure_default_site():
+def ensure_default_site(**kwargs):
     """Create the default Site row if the sites table is present and empty."""
     try:
         if not connection.introspection.table_names():
