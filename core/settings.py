@@ -4,6 +4,7 @@ from pathlib import Path
 import os
 from urllib.parse import quote_plus
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 
@@ -173,6 +174,12 @@ def get_database_url():
             f"@{pg_host}:{pg_port}/{quote_plus(pg_database)}"
         )
 
+    if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RAILWAY_PROJECT_ID'):
+        raise ImproperlyConfigured(
+            "Railway deployment requires DATABASE_URL or all PGHOST, PGPORT, "
+            "PGDATABASE, PGUSER, and PGPASSWORD variables."
+        )
+
     return f"sqlite:///{(BASE_DIR / 'db.sqlite3').as_posix()}"
 
 
@@ -192,6 +199,9 @@ try:
         )
     }
 except Exception:
+    if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RAILWAY_PROJECT_ID'):
+        raise
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',

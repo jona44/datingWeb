@@ -6,6 +6,28 @@ import uuid
 from django.db import migrations, models
 
 
+def convert_match_id_to_uuid(apps, schema_editor):
+    if schema_editor.connection.vendor != 'postgresql':
+        return
+
+    schema_editor.execute(
+        'ALTER TABLE "interactions_match" ALTER COLUMN "id" DROP IDENTITY IF EXISTS;'
+    )
+    schema_editor.execute(
+        'ALTER TABLE "interactions_match" ALTER COLUMN "id" TYPE uuid '
+        'USING (lpad(to_hex("id"), 32, \'0\')::uuid);'
+    )
+
+
+def convert_match_id_to_bigint(apps, schema_editor):
+    if schema_editor.connection.vendor != 'postgresql':
+        return
+
+    schema_editor.execute(
+        'ALTER TABLE "interactions_match" ALTER COLUMN "id" TYPE bigint;'
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -48,14 +70,9 @@ class Migration(migrations.Migration):
         ),
         migrations.SeparateDatabaseAndState(
             database_operations=[
-                migrations.RunSQL(
-                    sql=[
-                        'ALTER TABLE "interactions_match" ALTER COLUMN "id" DROP IDENTITY IF EXISTS;',
-                        'ALTER TABLE "interactions_match" ALTER COLUMN "id" TYPE uuid USING (lpad(to_hex("id"), 32, \'0\')::uuid);',
-                    ],
-                    reverse_sql=[
-                        'ALTER TABLE "interactions_match" ALTER COLUMN "id" TYPE bigint;',
-                    ],
+                migrations.RunPython(
+                    convert_match_id_to_uuid,
+                    convert_match_id_to_bigint,
                 ),
             ],
             state_operations=[
