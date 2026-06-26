@@ -1,10 +1,14 @@
 import os
-from django.core.asgi import get_asgi_application
-from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.auth import AuthMiddlewareStack
-import interactions.routing
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dating.settings")
+import django
+from channels.auth import AuthMiddlewareStack
+from channels.routing import ProtocolTypeRouter, URLRouter
+from django.core.asgi import get_asgi_application
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
+django.setup()
+
+import interactions.routing
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),

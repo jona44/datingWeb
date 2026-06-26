@@ -1,10 +1,14 @@
 import os
-from django.core.asgi import get_asgi_application
-from channels.routing import ProtocolTypeRouter, URLRouter
+
+import django
 from channels.auth import AuthMiddlewareStack
-import messaging.routing
+from channels.routing import ProtocolTypeRouter, URLRouter
+from django.core.asgi import get_asgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
+django.setup()
+
+import messaging.routing
 
 from .middleware import WebSocketTokenAuthMiddleware
 
