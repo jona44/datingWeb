@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["cd theme/static_src && npm install"]
+
+[phases.build]
+cmds = ["cd theme/static_src && npm run build", "python manage.py collectstatic --noinput"]
+
+[variables]
+NIXPACKS_NODE_VERSION = "20"
