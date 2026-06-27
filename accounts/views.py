@@ -19,6 +19,8 @@ def home(request, variant=None):
     if not profile.is_complete:
         step = max(1, profile.onboarding_step)
         return redirect("onboarding_step", step=step)
+    if variant:
+        return redirect(f"/{variant}/discover/")
     return redirect("discovery_feed")
 
 
