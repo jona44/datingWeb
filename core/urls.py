@@ -24,8 +24,9 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('web.urls')),
-    path('<slug:variant>/', include('web.urls')),
     path('', home, name='home'),
+    path('<slug:variant>/', home, name='variant_home'),
+    path('<slug:variant>/', include('web.urls')),
     path('accounts/', include('accounts.urls')),
     path('accounts/', include('allauth.urls')),
     path('interactions/', include('interactions.urls')),

@@ -14,7 +14,7 @@ from django.contrib import messages
 
 
 @login_required
-def home(request):
+def home(request, variant=None):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     if not profile.is_complete:
         step = max(1, profile.onboarding_step)
