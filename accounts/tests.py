@@ -1,4 +1,4 @@
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from .models import User, Profile, ProfilePhoto
@@ -132,4 +132,22 @@ class AppVariantCompatibilityTest(TestCase):
         middleware = VariantMiddleware(lambda req: req)
         middleware(request)
         
+        self.assertEqual(request.app_variant, 'general')
+
+    def test_middleware_uses_configured_domain_mapping(self):
+        """Test that VariantMiddleware uses configured hostnames for each variant."""
+        from django.test import RequestFactory
+        from web.middleware import VariantMiddleware
+
+        factory = RequestFactory()
+        request = factory.get('/', HTTP_HOST='community.example.com')
+
+        middleware = VariantMiddleware(lambda req: req)
+        with override_settings(
+            APP_VARIANT_DOMAINS={
+                'general': ['community.example.com'],
+            }
+        ):
+            middleware(request)
+
         self.assertEqual(request.app_variant, 'general')

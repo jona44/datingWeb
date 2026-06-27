@@ -52,6 +52,19 @@ LOCAL_ALLOWED_HOSTS = [
 
 ALLOWED_HOSTS = hosts or LOCAL_ALLOWED_HOSTS
 
+APP_VARIANT_DOMAINS = {
+    'hiv_plus': [
+        host.strip()
+        for host in os.getenv('HIV_PLUS_DOMAIN', '').split(',')
+        if host.strip()
+    ],
+    'general': [
+        host.strip()
+        for host in os.getenv('GENERAL_DOMAIN', '').split(',')
+        if host.strip()
+    ],
+}
+
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
