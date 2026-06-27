@@ -2,7 +2,7 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "RAILPACK",
-    "buildCommand": "python manage.py collectstatic --noinput"
+    "buildCommand": "tailwindcss -i ./theme/static_src/src/input.css -o ./theme/static/css/dist/styles.css --config ./theme/static_src/tailwind.config.js --minify && python manage.py collectstatic --noinput"
   },
   "deploy": {
     "preDeployCommand": "python manage.py migrate",
