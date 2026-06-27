@@ -1,7 +1,7 @@
 {% load static %}
 <nav class="bg-white border-b sticky top-0 z-50 shadow-sm">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-        <a href="/" class="flex items-center gap-2 text-xl sm:text-2xl font-bold bg-gradient-to-r {{ brand_gradient }} bg-clip-text text-transparent">
+        <a href="/{% if app_variant == 'general' %}general/{% else %}hiv-plus/{% endif %}" class="flex items-center gap-2 text-xl sm:text-2xl font-bold bg-gradient-to-r {{ brand_gradient }} bg-clip-text text-transparent">
             <img src="{% static brand_logo %}" alt="Logo" class="w-8 h-8 sm:w-10 sm:h-10 object-contain">
             {{ brand_name }}
         </a>
@@ -77,11 +77,11 @@
                     <span class="sm:hidden">🚪</span>
                 </a>
             {% else %}
-                <a href="{% url 'login' %}"
+                <a href="/{% if app_variant == 'general' %}general/{% else %}hiv-plus/{% endif %}accounts/login/"
                    class="text-sm text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 transition">
                     Login
                 </a>
-                <a href="{% url 'signup' %}"
+                <a href="/{% if app_variant == 'general' %}general/{% else %}hiv-plus/{% endif %}accounts/signup/"
                    class="text-sm bg-gradient-to-r {{ brand_gradient }} text-white px-4 py-2 rounded-lg font-medium hover:opacity-90 transition">
                     Sign up
                 </a>

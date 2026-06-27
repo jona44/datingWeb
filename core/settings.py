@@ -96,8 +96,6 @@ INSTALLED_APPS = [
     'web',
     "channels",
     'interactions',
-    'tailwind',
-    'theme',
     
     # API
     'rest_framework',
@@ -359,12 +357,10 @@ SOCIALACCOUNT_PROVIDERS = {
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
-# Tailwind Configuration
-TAILWIND_APP_NAME = 'theme'
+# Development helpers
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
-NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
