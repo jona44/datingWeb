@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import os
+import shutil
 from urllib.parse import quote_plus
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
@@ -364,7 +365,7 @@ TAILWIND_APP_NAME = 'theme'
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
-NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+NPM_BIN_PATH = os.getenv('NPM_BIN_PATH') or shutil.which('npm') or r"C:\Program Files\nodejs\npm.cmd"
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
