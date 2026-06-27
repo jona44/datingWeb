@@ -2,7 +2,6 @@
 
 from pathlib import Path
 import os
-import shutil
 from urllib.parse import quote_plus
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
@@ -97,8 +96,6 @@ INSTALLED_APPS = [
     'web',
     "channels",
     'interactions',
-    'tailwind',
-    'theme',
     
     # API
     'rest_framework',
@@ -360,12 +357,10 @@ SOCIALACCOUNT_PROVIDERS = {
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
-# Tailwind Configuration
-TAILWIND_APP_NAME = 'theme'
+# Development helpers
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
-NPM_BIN_PATH = os.getenv('NPM_BIN_PATH') or shutil.which('npm') or r"C:\Program Files\nodejs\npm.cmd"
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
