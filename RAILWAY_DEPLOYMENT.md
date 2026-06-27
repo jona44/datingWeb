@@ -4,7 +4,7 @@ This project is configured for Railway with `railway.json`.
 
 ## What Railway Runs
 
-- Build: `python manage.py collectstatic --noinput`
+- Build: `tailwindcss -i ./theme/static_src/src/input.css -o ./theme/static/css/dist/styles.css --config ./theme/static_src/tailwind.config.js --minify && python manage.py collectstatic --noinput`
 - Pre-deploy: `python manage.py migrate`
 - Start: `daphne -b 0.0.0.0 -p $PORT core.asgi:application`
 
