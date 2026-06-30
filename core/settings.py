@@ -70,6 +70,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://192.168.88.252:8000",
     "http://192.168.88.244:8000",
+    "http://hivplus.local:8000",
+    "http://diversehearts.local:8000",
 ]
 CSRF_TRUSTED_ORIGINS.extend(
     item.strip()
@@ -408,6 +410,11 @@ SIMPLE_JWT = {
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all in dev, restrict in production
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS',  "http://localhost:8081,http://192.168.88.252:8081,http://192.168.88.244:8081").split(',')
+
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-app-variant',
+]
 
 # Spectacular Settings
 SPECTACULAR_SETTINGS = {

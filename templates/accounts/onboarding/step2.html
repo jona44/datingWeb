@@ -106,11 +106,73 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="{{ form.height.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
-                            {{ form.height.label }}
+                    <div x-data="{
+                        selectedHeight: parseInt('{{ form.height.value|default:165 }}') || 165,
+                        heights: Array.from({length: 51}, (_, i) => 140 + i)
+                    }" 
+                    x-init="
+                        $nextTick(() => {
+                            const container = $refs.scrollContainer;
+                            const activeBtn = container.querySelector('.text-pink-500');
+                            if (activeBtn) {
+                                container.scrollLeft = activeBtn.offsetLeft - (container.clientWidth / 2) + (activeBtn.clientWidth / 2);
+                            }
+                        })
+                    }">
+                        <style>
+                            .scrollbar-none::-webkit-scrollbar {
+                                display: none;
+                            }
+                            .scrollbar-none {
+                                -ms-overflow-style: none;
+                                scrollbar-width: none;
+                            }
+                        </style>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Height: <span class="text-pink-600 font-bold" x-text="selectedHeight + ' cm'"></span>
                         </label>
-                        {{ form.height }}
+                        <input type="hidden" name="height" :value="selectedHeight">
+                        <div class="relative flex items-center gap-2">
+                            <!-- Left arrow -->
+                            <button type="button"
+                                    @click="if(selectedHeight > 140){ selectedHeight--; $nextTick(() => { const container = $refs.scrollContainer; const activeBtn = container.querySelector('.text-pink-500'); if(activeBtn){ container.scrollLeft = activeBtn.offsetLeft - (container.clientWidth / 2) + (activeBtn.clientWidth / 2); } }) }"
+                                    :disabled="selectedHeight <= 140"
+                                    :class="selectedHeight <= 140 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-pink-50 hover:border-pink-400 hover:text-pink-600'"
+                                    class="flex-shrink-0 w-9 h-9 rounded-full border border-gray-300 bg-white text-gray-500 flex items-center justify-center transition-all duration-200 focus:outline-none shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                                </svg>
+                            </button>
+
+                            <div class="flex overflow-x-auto py-2 px-1 gap-2 scrollbar-none snap-x snap-mandatory w-full" 
+                                 style="scroll-behavior: smooth;" 
+                                 x-ref="scrollContainer">
+                                <template x-for="h in heights" :key="h">
+                                    <button type="button"
+                                            @click="selectedHeight = h; $nextTick(() => {
+                                                const container = $refs.scrollContainer;
+                                                const btn = $event.currentTarget;
+                                                container.scrollLeft = btn.offsetLeft - (container.clientWidth / 2) + (btn.clientWidth / 2);
+                                            })"
+                                            :class="selectedHeight === h ? 'text-pink-500 scale-110 font-bold' : 'text-gray-500 hover:text-pink-400'"
+                                            class="flex-shrink-0 w-12 h-12 flex items-center justify-center text-sm font-bold transition-all duration-200 snap-center focus:outline-none"
+                                            x-text="h">
+                                    </button>
+                                </template>
+                            </div>
+
+                            <!-- Right arrow -->
+                            <button type="button"
+                                    @click="if(selectedHeight < 190){ selectedHeight++; $nextTick(() => { const container = $refs.scrollContainer; const activeBtn = container.querySelector('.text-pink-500'); if(activeBtn){ container.scrollLeft = activeBtn.offsetLeft - (container.clientWidth / 2) + (activeBtn.clientWidth / 2); } }) }"
+                                    :disabled="selectedHeight >= 190"
+                                    :class="selectedHeight >= 190 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-pink-50 hover:border-pink-400 hover:text-pink-600'"
+                                    class="flex-shrink-0 w-9 h-9 rounded-full border border-gray-300 bg-white text-gray-500 flex items-center justify-center transition-all duration-200 focus:outline-none shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                        </div>
+
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
