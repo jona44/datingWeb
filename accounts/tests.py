@@ -151,3 +151,39 @@ class AppVariantCompatibilityTest(TestCase):
             middleware(request)
 
         self.assertEqual(request.app_variant, 'general')
+
+    def test_middleware_prefix_stripping_and_session_persistence(self):
+        """Test that VariantMiddleware strips prefixes, sets variant, and stores it in session."""
+        from django.test import RequestFactory
+        from web.middleware import VariantMiddleware
+        
+        factory = RequestFactory()
+        
+        # Test hiv_plus prefix
+        request1 = factory.get('/hiv-plus/accounts/login/')
+        request1.session = {}
+        middleware = VariantMiddleware(lambda req: req)
+        middleware(request1)
+        
+        self.assertEqual(request1.app_variant, 'hiv_plus')
+        self.assertEqual(request1.session.get('app_variant'), 'hiv_plus')
+        self.assertEqual(request1.path_info, '/accounts/login/')
+        self.assertEqual(request1.path, '/accounts/login/')
+        
+        # Test general prefix
+        request2 = factory.get('/general/accounts/signup/')
+        request2.session = {}
+        middleware(request2)
+        
+        self.assertEqual(request2.app_variant, 'general')
+        self.assertEqual(request2.session.get('app_variant'), 'general')
+        self.assertEqual(request2.path_info, '/accounts/signup/')
+        self.assertEqual(request2.path, '/accounts/signup/')
+
+        # Test subsequent non-prefixed request loading from session
+        request3 = factory.get('/accounts/edit-profile/')
+        request3.session = {'app_variant': 'general'}
+        middleware(request3)
+        
+        self.assertEqual(request3.app_variant, 'general')
+        self.assertEqual(request3.path_info, '/accounts/edit-profile/')

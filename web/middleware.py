@@ -58,36 +58,61 @@ class VariantMiddleware:
 
     def __call__(self, request):
         host = request.get_host().lower()
-        path = request.path.lstrip('/').split('/', 1)[0]
 
         # 1. Explicit header from native mobile clients.
         header_variant = request.headers.get('X-App-Variant', '').strip().lower()
+
+        prefix_stripped = False
+        prefix_variant = None
+
+        # Determine if we have an explicit single-domain URL prefix
+        path_info = request.path_info
+        path_parts = path_info.lstrip('/').split('/', 1)
+        first_segment = path_parts[0]
+
+        if first_segment in {'hiv-plus', 'hiv_plus'}:
+            prefix_variant = 'hiv_plus'
+            prefix_stripped = True
+        elif first_segment in {'diverse-hearts', 'diversehearts', 'general'}:
+            prefix_variant = 'general'
+            prefix_stripped = True
+
         if header_variant in ('hiv_plus', 'general', 'diversehearts', 'hivplus', 'hiv-plus', 'diverse-hearts'):
             request.app_variant = self._normalize_variant(header_variant)
-            response = self.get_response(request)
-            return response
+        elif prefix_stripped:
+            request.app_variant = prefix_variant
 
-        # 2. Explicit single-domain URL prefix.
-        if path in {'hiv-plus', 'hiv_plus'}:
-            request.app_variant = 'hiv_plus'
-        elif path in {'diverse-hearts', 'diversehearts', 'general'}:
-            request.app_variant = 'general'
+            # Rewrite path_info and path to strip the variant prefix
+            # Example: /hiv-plus/accounts/login/ -> /accounts/login/
+            # Example: /hiv-plus/ -> /
+            new_path = '/' + (path_parts[1] if len(path_parts) > 1 else '')
+            request.path_info = new_path
+            request.path = new_path
         else:
-            domain_variant = self._variant_for_host(host)
-            if domain_variant:
-                request.app_variant = domain_variant
+            # Check session
+            session_variant = request.session.get('app_variant') if hasattr(request, 'session') else None
+            if session_variant:
+                request.app_variant = session_variant
             else:
-                # 3. Determine variant based on domain name for regular browser traffic.
-                if any(marker in host for marker in ('diversehearts', 'general', 'diverse-hearts')):
-                    request.app_variant = 'general'
-                elif any(marker in host for marker in ('hivplus', 'hiv-plus')):
-                    request.app_variant = 'hiv_plus'
+                # Determine variant based on domain mapping or fallback
+                domain_variant = self._variant_for_host(host)
+                if domain_variant:
+                    request.app_variant = domain_variant
                 else:
-                    # 4. Fallback to the environment variable for raw IP / localhost / Railway.
-                    request.app_variant = self._normalize_variant(os.getenv('APP_VARIANT', 'hiv_plus')) or 'hiv_plus'
+                    if any(marker in host for marker in ('diversehearts', 'general', 'diverse-hearts')):
+                        request.app_variant = 'general'
+                    elif any(marker in host for marker in ('hivplus', 'hiv-plus')):
+                        request.app_variant = 'hiv_plus'
+                    else:
+                        request.app_variant = self._normalize_variant(os.getenv('APP_VARIANT', 'hiv_plus')) or 'hiv_plus'
+
+        # Persist determined variant in session if available
+        if hasattr(request, 'session') and getattr(request, 'app_variant', None):
+            request.session['app_variant'] = request.app_variant
 
         # Redirect legacy root URLs to the explicit variant prefix when appropriate.
-        if request.path == '/' and request.app_variant in {'general', 'hiv_plus'} and not self._variant_for_host(host):
+        # Only do this if we did not just strip the prefix to avoid redirect loops.
+        if not prefix_stripped and request.path == '/' and request.app_variant in {'general', 'hiv_plus'} and not self._variant_for_host(host):
             if request.app_variant == 'general':
                 return redirect('/general/', permanent=False)
             return redirect('/hiv-plus/', permanent=False)
