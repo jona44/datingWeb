@@ -1,0 +1,18 @@
+[Unit]
+Description=Celery Workers
+After=network.target redis.service
+
+[Service]
+User=deploy
+Group=deploy
+WorkingDirectory=/var/www/dating
+EnvironmentFile=/var/www/dating/.env
+ExecStart=/var/www/dating/env/bin/celery \
+    -A core worker \
+    --loglevel=info \
+    --concurrency=2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

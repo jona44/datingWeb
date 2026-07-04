@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="max-w-4xl mx-auto py-8 px-4" hx-ext="ws" ws-connect="/ws/chat/{{ conversation.id }}/">
+<div class="max-w-4xl mx-auto py-8 px-4">
   
   <!-- Header with presence indicator -->
   <div class="bg-white rounded-t-2xl p-4 border-b flex items-center justify-between">
@@ -49,88 +49,111 @@
 
   <!-- Message Input -->
   <div class="bg-white rounded-b-2xl p-4">
-    <form
-      hx-post="{% url 'send_message' conversation.id %}"
-      hx-target="#messages"
-      hx-swap="beforeend"
-      hx-on::after-request="this.reset(); setTimeout(() => { document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight }, 100)"
-      class="flex gap-3">
-      {% csrf_token %}
-
+    <div class="flex gap-3">
       <input
-        name="body"
         id="message-input"
         class="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-{{ brand_primary }} focus:border-transparent"
         placeholder="Type your message…"
-        autocomplete="off"
-        required/>
+        autocomplete="off"/>
 
-      <button type="submit" class="bg-gradient-to-r {{ brand_gradient }} text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition flex items-center gap-2">
+      <button id="send-btn" class="bg-gradient-to-r {{ brand_gradient }} text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition flex items-center gap-2">
         <span>Send</span>
         <span>→</span>
       </button>
-    </form>
+    </div>
+    <p id="ws-status" class="text-xs text-gray-400 mt-1 hidden">Reconnecting…</p>
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const messages = document.getElementById('messages');
+      const messages   = document.getElementById('messages');
+      const input      = document.getElementById('message-input');
+      const sendBtn    = document.getElementById('send-btn');
+      const wsStatus   = document.getElementById('ws-status');
       const currentProfileId = "{{ profile.id }}";
       messages.scrollTop = messages.scrollHeight;
 
-      // Handle custom WebSocket events (typing, presence, chat_message)
-      const wsElement = document.querySelector('[ws-connect]');
-      wsElement.addEventListener('htmx:wsBeforeMessage', (e) => {
+      // --- WebSocket setup with auto-reconnect ---
+      const WS_URL = (location.protocol === 'https:' ? 'wss' : 'ws') +
+                     '://' + location.host + '/ws/chat/{{ conversation.id }}/';
+      let ws;
+      let reconnectTimer;
+
+      function connectWS() {
+        ws = new WebSocket(WS_URL);
+
+        ws.onopen = () => {
+          wsStatus.classList.add('hidden');
+        };
+
+        ws.onclose = () => {
+          wsStatus.textContent = 'Connection lost. Reconnecting…';
+          wsStatus.classList.remove('hidden');
+          clearTimeout(reconnectTimer);
+          reconnectTimer = setTimeout(connectWS, 3000);
+        };
+
+        ws.onerror = () => ws.close();
+
+        ws.onmessage = (e) => {
           try {
-              const data = JSON.parse(e.detail.message);
-              
-              if (data.type === 'typing') {
-                  const indicator = document.getElementById('typing-indicator');
-                  indicator.innerText = 'Someone is typing...';
-                  clearTimeout(window.typingTimeout);
-                  window.typingTimeout = setTimeout(() => {
-                      indicator.innerText = '';
-                  }, 3000);
-                  e.preventDefault(); // Don't swap
-              } else if (data.type === 'status') {
-                  const dot = document.getElementById(`presence-${data.user}`);
-                  const text = document.getElementById(`last-seen-${data.user}`);
-                  if (dot) dot.className = `absolute bottom-0 right-0 w-3 h-3 ${data.status === 'online' ? 'bg-green-500' : 'bg-gray-300'} border-2 border-white rounded-full`;
-                  if (text) text.innerText = data.status === 'online' ? 'Online' : 'Just now';
-                  e.preventDefault();
-              } else if (data.type === 'chat_message') {
-                  // If I'm the sender, I already have the message from HTMX POST
-                  if (data.sender_id === currentProfileId) {
-                      e.preventDefault();
-                      return;
-                  }
-                  
-                  // Extract the message HTML from the OOB wrapper and insert it
-                  const tempDiv = document.createElement('div');
-                  tempDiv.innerHTML = data.html;
-                  const oobDiv = tempDiv.querySelector('#messages');
-                  if (oobDiv) {
-                      messages.insertAdjacentHTML('beforeend', oobDiv.innerHTML);
-                      // Trigger scroll after append
-                      setTimeout(() => {
-                          messages.scrollTop = messages.scrollHeight;
-                      }, 100);
-                  }
-                  
-                  e.preventDefault();
+            const data = JSON.parse(e.data);
+
+            if (data.type === 'typing') {
+              const indicator = document.getElementById('typing-indicator');
+              indicator.innerText = 'Someone is typing...';
+              clearTimeout(window.typingTimeout);
+              window.typingTimeout = setTimeout(() => { indicator.innerText = ''; }, 3000);
+
+            } else if (data.type === 'status') {
+              const dot  = document.getElementById(`presence-${data.user}`);
+              const text = document.getElementById(`last-seen-${data.user}`);
+              if (dot)  dot.className = `absolute bottom-0 right-0 w-3 h-3 ${data.status === 'online' ? 'bg-green-500' : 'bg-gray-300'} border-2 border-white rounded-full`;
+              if (text) text.innerText = data.status === 'online' ? 'Online' : 'Just now';
+
+            } else if (data.type === 'chat_message') {
+              // Message sent by ME is already appended optimistically; skip.
+              if (data.sender_id === currentProfileId) return;
+
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = data.html;
+              const oobDiv = tempDiv.querySelector('#messages');
+              if (oobDiv) {
+                messages.insertAdjacentHTML('beforeend', oobDiv.innerHTML);
+                setTimeout(() => { messages.scrollTop = messages.scrollHeight; }, 100);
               }
+            }
           } catch (err) {
-              console.error("WS Message Error:", err);
+            console.error('WS Message Error:', err);
           }
+        };
+      }
+
+      connectWS();
+
+      // --- Send message via WebSocket ---
+      function sendMessage() {
+        const body = input.value.trim();
+        if (!body) return;
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          alert('Connection not ready. Please wait a moment.');
+          return;
+        }
+        ws.send(JSON.stringify({ type: 'chat_message', message: body }));
+        input.value = '';
+        setTimeout(() => { messages.scrollTop = messages.scrollHeight; }, 100);
+      }
+
+      sendBtn.addEventListener('click', sendMessage);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
       });
 
-      // Typing ping via socket
-      const input = document.getElementById('message-input');
+      // --- Typing indicator ---
       input.addEventListener('keyup', () => {
-          const ws = htmx.values(wsElement).ws;
-          if (ws && ws.readyState === WebSocket.OPEN) {
-              ws.send(JSON.stringify({type: 'typing'}));
-          }
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'typing' }));
+        }
       });
     });
   </script>
