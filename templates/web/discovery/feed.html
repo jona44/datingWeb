@@ -6,7 +6,11 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
         <div>
             <h1 class="text-4xl font-black text-gray-900 tracking-tight">Discover</h1>
+            {% if app_variant == 'general' %}
+            <p class="text-gray-500 font-medium">Find your meaningful connection</p>
+            {% else %}
             <p class="text-gray-500 font-medium">Find people who share your journey</p>
+            {% endif %}
         </div>
         
         <div class="flex items-center gap-3">
@@ -38,7 +42,7 @@
                                             hx-get="{% url 'preferences' %}"
                                             hx-target="#slideover-body"
                                             hx-swap="innerHTML"
-                                            @click="slideoverOpen = true">match criteria</a> or check back later for new members.
+                                            @click="slideoverOpen = true">match criteria</a> or check back later for new members joining the community.
                     </p>
                 </div>
             {% endfor %}

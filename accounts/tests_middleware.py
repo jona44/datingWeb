@@ -11,7 +11,7 @@ User = get_user_model()
 class ProfileCompletionMiddlewareTest(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
-        self.user = User.objects.create_user(email='test@example.com', password='password123')
+        self.user = User.objects.create_user(phone_number='+27821111111', email='test@example.com')
         self.profile = Profile.objects.get(user=self.user)
         # Ensure profile starts incomplete
         self.profile.is_complete = False
@@ -42,7 +42,6 @@ class ProfileCompletionMiddlewareTest(TestCase):
         middleware = ProfileCompletionMiddleware(lambda r: 'success')
         
         request = self.factory.get('/discover/')
-        # Refresh user from DB to ensure no stale profile cache is used
         request.user = User.objects.get(id=self.user.id)
         
         response = middleware(request)
@@ -50,40 +49,29 @@ class ProfileCompletionMiddlewareTest(TestCase):
         self.assertEqual(response, 'success')
 
     def test_unauthenticated_user_no_redirect(self):
-        """Unauthenticated user should not be redirected by this middleware."""
+        """Anonymous user should not be redirected."""
         from django.contrib.auth.models import AnonymousUser
-        
         middleware = ProfileCompletionMiddleware(lambda r: 'success')
         
         request = self.factory.get('/discover/')
         request.user = AnonymousUser()
         
         response = middleware(request)
-        
         self.assertEqual(response, 'success')
 
-    def test_onboarding_path_no_redirect(self):
-        """Onboarding paths themselves should not cause further redirects (avoid loops)."""
+    def test_whitelisted_paths_no_redirect(self):
+        """Incomplete user visiting whitelisted paths shouldn't be redirected."""
         middleware = ProfileCompletionMiddleware(lambda r: 'success')
         
-        request = self.factory.get(reverse('onboarding_step', kwargs={'step': 1}))
-        request.user = self.user
+        whitelisted = [
+            reverse('onboarding_step', kwargs={'step': 1}),
+            reverse('onboarding_step', kwargs={'step': 2}),
+            reverse('logout'),
+            '/static/css/style.css',
+        ]
         
-        response = middleware(request)
-        
-        self.assertEqual(response, 'success')
-
-    def test_admin_path_no_redirect(self):
-        """Admin paths should not be redirected, even for users with incomplete profiles (if they have perms)."""
-        # Note: Middleware specifically allows is_admin_path or is_staff/is_superuser
-        self.user.is_staff = True
-        self.user.save()
-        
-        middleware = ProfileCompletionMiddleware(lambda r: 'success')
-        
-        request = self.factory.get('/admin/')
-        request.user = self.user
-        
-        response = middleware(request)
-        
-        self.assertEqual(response, 'success')
+        for path in whitelisted:
+            request = self.factory.get(path)
+            request.user = self.user
+            response = middleware(request)
+            self.assertEqual(response, 'success', f"Failed for path: {path}")

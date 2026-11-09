@@ -1,16 +1,48 @@
 import json
+import os
+import phonenumbers
+from phonenumbers import NumberParseException, PhoneNumberFormat
+
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render, get_object_or_404, HttpResponse
-from .forms import (
-    ProfileForm, SignupForm, OnboardingStep1Form, 
-    OnboardingStep2Form, OnboardingStep3Form, OnboardingStep4Form
-)
-from .constants import GEOGRAPHIC_DATA
+from django.core.exceptions import ValidationError
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.views.decorators.http import require_POST
+
 from discovery.forms import PreferenceForm
 from discovery.models import Preference
-from .models import Profile, ProfilePhoto
-from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
+from .constants import GEOGRAPHIC_DATA
+from .forms import (
+    OnboardingStep1Form,
+    OnboardingStep2Form,
+    OnboardingStep3Form,
+    OnboardingStep4Form,
+    ProfileForm,
+)
+from .models import PhoneVerification, Profile, ProfilePhoto, User
+
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
+
+def normalize_phone(raw_phone, default_region='ZA'):
+    raw_phone = str(raw_phone).strip()
+    try:
+        parsed = phonenumbers.parse(raw_phone, default_region)
+        if not phonenumbers.is_valid_number(parsed):
+            return None, "Invalid phone number format."
+        formatted = phonenumbers.format_number(parsed, PhoneNumberFormat.E164)
+        return formatted, None
+    except NumberParseException:
+        return None, "Could not parse phone number. Please include a valid country code (e.g. +27 or +263)."
 
 
 @login_required
@@ -34,7 +66,6 @@ def onboarding_step_view(request, step):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     
     # Determine variant
-    import os
     variant = getattr(request, 'app_variant', os.getenv('APP_VARIANT', 'hiv_plus'))
     
     # If general variant and trying to access step 3, redirect to step 4
@@ -106,8 +137,6 @@ def onboarding_step_view(request, step):
     })
 
 
-
-
 @login_required
 def edit_profile(request):
     """Allow users to edit their profile and match preferences"""
@@ -147,30 +176,18 @@ def edit_profile(request):
     })
 
 
-
 def login_view(request):
+    """Unified Passwordless Phone Login/Signup Page"""
     if request.user.is_authenticated:
         return redirect("home")
+    return render(request, "accounts/login.html", {"mode": "login"})
 
-    if request.method == "POST":
-        email = request.POST.get("email")
-        password = request.POST.get("password")
 
-        user = authenticate(request, username=email, password=password)
-
-        if user:
-            import os
-            req_variant = getattr(request, 'app_variant', os.getenv('APP_VARIANT', 'hiv_plus'))
-            if hasattr(user, 'profile') and user.profile.app_variant and user.profile.app_variant != req_variant:
-                messages.error(request, "Account registered for a different community variant.")
-            else:
-                login(request, user)
-                return redirect("home")
-        else:
-            messages.error(request, "Invalid email or password")
-
-    return render(request, "accounts/login.html")
-
+def signup_view(request):
+    """Unified Passwordless Phone Signup redirects to the unified auth page"""
+    if request.user.is_authenticated:
+        return redirect("home")
+    return render(request, "accounts/login.html", {"mode": "signup"})
 
 
 def logout_view(request):
@@ -178,29 +195,89 @@ def logout_view(request):
     return redirect("login")
 
 
+@require_POST
+def send_otp_view(request):
+    """AJAX endpoint: Send OTP to provided phone number"""
+    raw_phone = request.POST.get("phone_number", "").strip()
+    if not raw_phone:
+        return JsonResponse({"success": False, "error": "Please enter a valid phone number."}, status=400)
+
+    default_region = getattr(settings, 'PHONENUMBER_DEFAULT_REGION', 'ZA')
+    formatted_phone, err = normalize_phone(raw_phone, default_region)
+    if err:
+        return JsonResponse({"success": False, "error": err}, status=400)
+
+    ip_address = get_client_ip(request)
+
+    try:
+        record, code = PhoneVerification.request_otp(formatted_phone, ip_address=ip_address)
+        return JsonResponse({
+            "success": True,
+            "message": "Verification code sent.",
+            "phone_number": formatted_phone,
+            "expires_in": getattr(settings, 'OTP_EXPIRATION_SECONDS', 300)
+        })
+    except ValidationError as e:
+        return JsonResponse({"success": False, "error": e.message}, status=429)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": "Unable to send verification code right now. Please try again."}, status=500)
 
 
-def signup_view(request):
-    if request.user.is_authenticated:
-        return redirect("home")
+@require_POST
+def verify_otp_view(request):
+    """AJAX endpoint: Verify OTP and log in / register user"""
+    raw_phone = request.POST.get("phone_number", "").strip()
+    code = request.POST.get("otp", "").strip()
 
-    if request.method == "POST":
-        form = SignupForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            
-            # Ensure the profile belongs to the correct app variant
-            if hasattr(user, 'profile'):
-                import os
-                user.profile.app_variant = getattr(request, 'app_variant', os.getenv('APP_VARIANT', 'hiv_plus'))
-                user.profile.save()
-                
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect("welcome")
+    if not raw_phone or not code:
+        return JsonResponse({"success": False, "error": "Phone number and verification code are required."}, status=400)
+
+    default_region = getattr(settings, 'PHONENUMBER_DEFAULT_REGION', 'ZA')
+    formatted_phone, err = normalize_phone(raw_phone, default_region)
+    if err:
+        return JsonResponse({"success": False, "error": err}, status=400)
+
+    is_valid, message = PhoneVerification.verify_otp(formatted_phone, code)
+    if not is_valid:
+        return JsonResponse({"success": False, "error": message}, status=400)
+
+    # User lookup or creation
+    created = False
+    try:
+        user = User.objects.get(phone_number=formatted_phone)
+    except User.DoesNotExist:
+        user = User.objects.create_user(phone_number=formatted_phone)
+        created = True
+
+    # Variant isolation check
+    req_variant = getattr(request, 'app_variant', os.getenv('APP_VARIANT', 'hiv_plus'))
+    profile, _ = Profile.objects.get_or_create(user=user)
+
+    if not created and profile.app_variant and profile.app_variant != req_variant:
+        return JsonResponse({
+            "success": False,
+            "error": "This account is registered for a different community variant."
+        }, status=403)
+
+    if created:
+        profile.app_variant = req_variant
+        profile.save()
+
+    # Log in the user
+    login(request, user, backend='accounts.backends.PhoneOTPBackend')
+
+    if not profile.is_complete:
+        step = max(1, profile.onboarding_step)
+        redirect_url = reverse("onboarding_step", kwargs={"step": step})
     else:
-        form = SignupForm()
+        redirect_url = reverse("discovery_feed")
 
-    return render(request, "accounts/signup.html", {"form": form})
+    return JsonResponse({
+        "success": True,
+        "message": "Authenticated successfully.",
+        "redirect_url": redirect_url,
+        "is_new_user": created
+    })
 
 
 @login_required

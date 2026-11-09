@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Report {{ profile.display_name|default:"User" }} - {{ brand_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-6 sm:py-10 px-4">
+  <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+    
+    <!-- Top banner / Warning icon -->
+    <div class="bg-red-50 border-b border-red-100 p-6 flex items-start gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl flex-shrink-0 shadow-sm">
+        🛡️
+      </div>
+      <div>
+        <h1 class="text-2xl font-black text-gray-900 tracking-tight">Report a User</h1>
+        <p class="text-sm text-gray-600 mt-1 leading-relaxed">
+          Your safety and comfort are our top priority. Reports are completely anonymous, confidential, and reviewed promptly by our moderation team.
+        </p>
+      </div>
+    </div>
+
+    <!-- Reported Profile Summary Card -->
+    <div class="p-6 sm:p-8 space-y-6">
+      <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+        {% if profile.profile_picture %}
+          <img src="{{ profile.profile_picture.url }}" alt="{{ profile.display_name }}" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md">
+        {% else %}
+          <div class="w-16 h-16 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-2xl shadow-md">
+            👤
+          </div>
+        {% endif %}
+        <div class="flex-1 min-w-0">
+          <p class="text-xs uppercase tracking-wider font-semibold text-gray-400">Reporting Profile</p>
+          <h2 class="text-lg font-bold text-gray-900 truncate">
+            {{ profile.display_name|default:profile.user.email }}
+          </h2>
+          {% if profile.city or profile.location %}
+            <p class="text-xs text-gray-500 mt-0.5">📍 {{ profile.city|default:profile.location }}</p>
+          {% endif %}
+        </div>
+        <a href="{% url 'profile_view' profile.id %}" class="text-xs font-semibold text-gray-500 hover:text-gray-900 transition underline underline-offset-2">
+          View Profile
+        </a>
+      </div>
+
+      <!-- Report Form -->
+      <form method="post" action="{% url 'report_user' profile.id %}" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Reason Selection -->
+        <div>
+          <label class="block text-sm font-bold text-gray-800 mb-3">
+            Why are you reporting this user? <span class="text-red-500">*</span>
+          </label>
+          <div class="space-y-2.5">
+            {% for code, label in reason_choices %}
+              <label class="flex items-start gap-3 p-3.5 rounded-xl border border-gray-200 hover:border-red-300 hover:bg-red-50/30 transition cursor-pointer group">
+                <input type="radio" name="reason" value="{{ code }}" {% if forloop.first %}checked{% endif %} class="mt-1 text-red-600 focus:ring-red-500 h-4 w-4 border-gray-300">
+                <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900 leading-snug">
+                  {{ label }}
+                </span>
+              </label>
+            {% empty %}
+              <label class="flex items-center gap-3 p-3.5 rounded-xl border border-gray-200 hover:border-red-300 hover:bg-red-50/30 transition cursor-pointer">
+                <input type="radio" name="reason" value="spam" checked class="text-red-600 focus:ring-red-500">
+                <span class="text-sm font-medium text-gray-700">Spam or fake account</span>
+              </label>
+              <label class="flex items-center gap-3 p-3.5 rounded-xl border border-gray-200 hover:border-red-300 hover:bg-red-50/30 transition cursor-pointer">
+                <input type="radio" name="reason" value="inappropriate" class="text-red-600 focus:ring-red-500">
+                <span class="text-sm font-medium text-gray-700">Inappropriate content or behavior</span>
+              </label>
+              <label class="flex items-center gap-3 p-3.5 rounded-xl border border-gray-200 hover:border-red-300 hover:bg-red-50/30 transition cursor-pointer">
+                <input type="radio" name="reason" value="harassment" class="text-red-600 focus:ring-red-500">
+                <span class="text-sm font-medium text-gray-700">Harassment or bullying</span>
+              </label>
+              <label class="flex items-center gap-3 p-3.5 rounded-xl border border-gray-200 hover:border-red-300 hover:bg-red-50/30 transition cursor-pointer">
+                <input type="radio" name="reason" value="scam" class="text-red-600 focus:ring-red-500">
+                <span class="text-sm font-medium text-gray-700">Scam or fraud</span>
+              </label>
+              <label class="flex items-center gap-3 p-3.5 rounded-xl border border-gray-200 hover:border-red-300 hover:bg-red-50/30 transition cursor-pointer">
+                <input type="radio" name="reason" value="other" class="text-red-600 focus:ring-red-500">
+                <span class="text-sm font-medium text-gray-700">Other</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Description Details -->
+        <div>
+          <label for="description" class="block text-sm font-bold text-gray-800 mb-2">
+            Additional Details <span class="text-xs font-normal text-gray-500">(Optional)</span>
+          </label>
+          <textarea 
+            id="description" 
+            name="description" 
+            rows="4" 
+            placeholder="Please provide any additional context or details to help us investigate (e.g., messages sent, inappropriate photos, etc.)."
+            class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm placeholder-gray-400 resize-none transition"
+          ></textarea>
+        </div>
+
+        <!-- Block Also Checkbox -->
+        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200/80">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" name="block_also" checked class="mt-1 h-4 w-4 text-red-600 rounded border-gray-300 focus:ring-red-500">
+            <div>
+              <span class="text-sm font-bold text-gray-800">Also block this user</span>
+              <p class="text-xs text-gray-500 mt-0.5">
+                They won't be able to view your profile, send you messages, or match with you again.
+              </p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Submit and Back Actions -->
+        <div class="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-2">
+          <a href="{% url 'profile_view' profile.id %}" class="w-full sm:w-auto px-6 py-3 rounded-2xl border border-gray-200 text-gray-700 text-sm font-bold hover:bg-gray-100 transition text-center">
+            Cancel
+          </a>
+          <button type="submit" class="w-full sm:w-auto px-8 py-3 rounded-2xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition shadow-md shadow-red-200">
+            Submit Report
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Quick Block Option -->
+    <div class="bg-gray-50 border-t border-gray-100 px-6 sm:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+      <span>Just want to stop seeing this user without filing a report?</span>
+      <a href="{% url 'block_user' profile.id %}" onclick="return confirm('Are you sure you want to block this user?');" class="font-bold text-red-600 hover:text-red-700 hover:underline">
+        Block User Only →
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

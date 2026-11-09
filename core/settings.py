@@ -72,6 +72,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://192.168.88.244:8000",
     "http://hivplus.local:8000",
     "http://diversehearts.local:8000",
+    "http://hivplus.local",
+    "http://diversehearts.local",
 ]
 CSRF_TRUSTED_ORIGINS.extend(
     item.strip()
@@ -105,6 +107,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.facebook',
 
+    'phonenumber_field',
     'accounts',
     'discovery',
     'messaging',
@@ -168,6 +171,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 
 AUTHENTICATION_BACKENDS = [
+    'accounts.backends.PhoneOTPBackend',
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
@@ -444,3 +448,11 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
+
+# Phone / SMS Authentication Configuration
+PHONENUMBER_DEFAULT_REGION = os.getenv('PHONENUMBER_DEFAULT_REGION', 'ZA')
+SMS_BACKEND = os.getenv('SMS_BACKEND', 'accounts.sms.ConsoleBackend')
+OTP_EXPIRATION_SECONDS = int(os.getenv('OTP_EXPIRATION_SECONDS', '300'))
+OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv('OTP_RESEND_COOLDOWN_SECONDS', '60'))
+OTP_MAX_ATTEMPTS = int(os.getenv('OTP_MAX_ATTEMPTS', '5'))
+DEV_FIXED_OTP = os.getenv('DEV_FIXED_OTP', '')

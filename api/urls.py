@@ -1,15 +1,27 @@
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .views import (
-    register_user, logout_user, current_user, SocialLoginView,
-    get_geographic_metadata,
-    ProfileViewSet, ProfilePhotoViewSet, PreferenceViewSet,
-    LikeViewSet, MatchViewSet, BlockViewSet, ReportViewSet, SkipViewSet,
-    ConversationViewSet, MessageViewSet
-)
 from .serializers import CustomTokenObtainPairSerializer
+from .views import (
+    BlockViewSet,
+    ConversationViewSet,
+    LikeViewSet,
+    MatchViewSet,
+    MessageViewSet,
+    PreferenceViewSet,
+    ProfilePhotoViewSet,
+    ProfileViewSet,
+    ReportViewSet,
+    SkipViewSet,
+    SocialLoginView,
+    current_user,
+    get_geographic_metadata,
+    logout_user,
+    phone_send_otp,
+    phone_verify_otp,
+    register_user,
+)
 
 # Create router for ViewSets
 router = DefaultRouter()
@@ -25,7 +37,11 @@ router.register(r'conversations', ConversationViewSet, basename='conversation')
 router.register(r'messages', MessageViewSet, basename='message')
 
 urlpatterns = [
-    # Authentication
+    # Phone Passwordless OTP Authentication
+    path('auth/phone/send-otp/', phone_send_otp, name='phone_send_otp'),
+    path('auth/phone/verify-otp/', phone_verify_otp, name='phone_verify_otp'),
+
+    # Existing Auth routes (JWT, Social, Legacy)
     path('auth/register/', register_user, name='register'),
     path('auth/login/', TokenObtainPairView.as_view(serializer_class=CustomTokenObtainPairSerializer), name='token_obtain_pair'),
     path('auth/social/', SocialLoginView.as_view(), name='social_login'),

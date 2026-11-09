@@ -14,9 +14,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     Custom Serializer to handle both 'username' and 'email' fields in the request.
     The User model uses 'email' as the unique identifier instead of 'username'.
     """
-    # Accept both 'username' and 'email' keys from clients
+    # Accept 'phone_number', 'username', and 'email' keys from clients
+    phone_number = serializers.CharField(write_only=True, required=False)
     username = serializers.CharField(write_only=True, required=False)
-    email = serializers.EmailField(write_only=True, required=False)
+    email = serializers.CharField(write_only=True, required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -30,11 +31,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # For our User model, self.username_field is 'email'.
         
         # Determine the identifier from provided fields
+        phone_val = attrs.get('phone_number')
         username_val = attrs.get('username')
         email_val = attrs.get('email')
         
-        # Prefer 'email' if provided, then 'username'
-        identifier = email_val or username_val
+        # Prefer 'phone_number', then 'email', then 'username'
+        identifier = phone_val or email_val or username_val
         
         if identifier:
             # Map the identifier to the field the parent serializer expects ('email')
@@ -73,8 +75,43 @@ class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model"""
     class Meta:
         model = User
-        fields = ['id', 'email', 'is_active', 'date_joined']
+        fields = ['id', 'phone_number', 'email', 'is_active', 'date_joined']
         read_only_fields = ['id', 'date_joined']
+
+
+class PhoneSendOTPSerializer(serializers.Serializer):
+    phone_number = serializers.CharField(max_length=30, required=True)
+
+    def validate_phone_number(self, value):
+        import phonenumbers
+        from phonenumbers import NumberParseException, PhoneNumberFormat
+        from django.conf import settings
+        default_region = getattr(settings, 'PHONENUMBER_DEFAULT_REGION', 'ZA')
+        try:
+            parsed = phonenumbers.parse(value.strip(), default_region)
+            if not phonenumbers.is_valid_number(parsed):
+                raise serializers.ValidationError("Invalid phone number format.")
+            return phonenumbers.format_number(parsed, PhoneNumberFormat.E164)
+        except NumberParseException:
+            raise serializers.ValidationError("Could not parse phone number. Please include valid country code.")
+
+
+class PhoneVerifyOTPSerializer(serializers.Serializer):
+    phone_number = serializers.CharField(max_length=30, required=True)
+    otp = serializers.CharField(max_length=10, required=True)
+
+    def validate_phone_number(self, value):
+        import phonenumbers
+        from phonenumbers import NumberParseException, PhoneNumberFormat
+        from django.conf import settings
+        default_region = getattr(settings, 'PHONENUMBER_DEFAULT_REGION', 'ZA')
+        try:
+            parsed = phonenumbers.parse(value.strip(), default_region)
+            if not phonenumbers.is_valid_number(parsed):
+                raise serializers.ValidationError("Invalid phone number format.")
+            return phonenumbers.format_number(parsed, PhoneNumberFormat.E164)
+        except NumberParseException:
+            raise serializers.ValidationError("Could not parse phone number. Please include valid country code.")
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

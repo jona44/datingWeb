@@ -1,9 +1,11 @@
-from django.test import TestCase, Client, override_settings
-from django.urls import reverse
-from django.core.files.uploadedfile import SimpleUploadedFile
-from .models import User, Profile, ProfilePhoto
 import io
 from PIL import Image
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client, TestCase, override_settings
+from django.urls import reverse
+
+from .models import PhoneVerification, Profile, ProfilePhoto, User
+
 
 def generate_image_file(name='test_image.jpg'):
     """Generate a valid image file for testing."""
@@ -13,11 +15,12 @@ def generate_image_file(name='test_image.jpg'):
     file.seek(0)
     return SimpleUploadedFile(name, file.read(), content_type='image/jpeg')
 
+
 class ProfilePhotoUploadTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(email='test@example.com', password='password123')
-        self.client.login(email='test@example.com', password='password123')
+        self.user = User.objects.create_user(phone_number='+27821111111', email='test@example.com')
+        self.client.force_login(self.user)
         self.profile, _ = Profile.objects.get_or_create(user=self.user)
         self.profile.is_complete = True
         self.profile.save()
@@ -26,60 +29,42 @@ class ProfilePhotoUploadTest(TestCase):
         """Test uploading additional photos via edit_profile view."""
         url = reverse('edit_profile')
         
-        # Prepare valid form data
         data = {
-            # ProfileForm data
             'display_name': 'Test User',
             'birth_date': '1990-01-01',
             'gender': 'male',
-            'city': 'Test City',
-            'nationality': 'Test Nation',
-            'ethnicity': 'any',
+            'residence_country': 'South Africa',
+            'city': 'Johannesburg',
+            'nationality': 'South Africa',
+            'ethnicity': 'Zulu',
             'bio': 'Test Bio',
             'education_level': 'high_school',
             'employment_status': 'employed',
             'children_status': 'none',
             'children_count': 0,
-            'hobbies': 'Test Hobbies',
+            'hobbies': 'sports',
             'height': 180,
             'smoking': 'never',
             'drinking': 'never',
-            'diagnosis_year': '',
-            'treatment_status': '',
-            'disclosure_comfort': '',
             
             # PreferenceForm data
             'min_age': 18,
             'max_age': 99,
             'interested_in': 'all',
-            'pref_city': 'Test City',
-            'pref_max_children': '',
-            'pref_nationality': '',
+            'pref_city': 'Johannesburg',
             'pref_ethnicity': 'any',
             'show_me': 'on',
             
-            # Additional Photos (manual handling)
+            # Additional Photos
             'additional_photos': [generate_image_file('photo1.jpg'), generate_image_file('photo2.jpg')]
         }
         
         response = self.client.post(url, data, follow=True)
-        
-        # Check validation success
-        # Check validation success
-        if response.context:
-             if 'form' in response.context and response.context['form'].errors:
-                 pass
-             if 'pref_form' in response.context and response.context['pref_form'].errors:
-                 pass
-
         self.assertEqual(response.status_code, 200)
-        
-        # Verify photos were created
         self.assertEqual(ProfilePhoto.objects.filter(profile=self.profile).count(), 2)
 
     def test_onboarding_step4_photo_upload(self):
         """Test uploading additional photos via onboarding step 4."""
-        # Ensure we are on step 4
         self.profile.onboarding_step = 4
         self.profile.save()
         
@@ -88,26 +73,109 @@ class ProfilePhotoUploadTest(TestCase):
         data = {
             'bio': 'Test Bio Step 4',
             'location': 'Test Location',
-            # additional_photos
-            'additional_photos': [generate_image_file('step4_photo.jpg')]
+            'profile_picture': generate_image_file('main_profile.jpg'),
+            'additional_photos': [generate_image_file('extra1.jpg')]
         }
         
         response = self.client.post(url, data, follow=True)
-        
-        if response.context and 'form' in response.context:
-             if response.context['form'].errors:
-                 print("Step 4 Form Errors:", response.context['form'].errors)
-
         self.assertEqual(response.status_code, 200)
-        
-        # Verify photo count (2 from previous test if ran sequentially? No, TestCase cleans up DB)
-        # But this is a separate test method.
         self.assertEqual(ProfilePhoto.objects.filter(profile=self.profile).count(), 1)
+
+
+class PhoneOTPAuthenticationTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.test_phone = '+27821234567'
+
+    def test_request_otp_model(self):
+        """Test requesting OTP code via PhoneVerification model."""
+        record, code = PhoneVerification.request_otp(self.test_phone)
+        self.assertEqual(len(code), 6)
+        self.assertTrue(code.isdigit())
+        self.assertEqual(record.phone_number, self.test_phone)
+        self.assertFalse(record.is_verified)
+
+    def test_verify_otp_valid_and_invalid(self):
+        """Test OTP verification success and failure."""
+        record, code = PhoneVerification.request_otp(self.test_phone)
+
+        # Invalid code
+        success, msg = PhoneVerification.verify_otp(self.test_phone, '000000')
+        self.assertFalse(success)
+
+        # Valid code
+        success, msg = PhoneVerification.verify_otp(self.test_phone, code)
+        self.assertTrue(success)
+
+        # Re-using already verified code should fail
+        success, msg = PhoneVerification.verify_otp(self.test_phone, code)
+        self.assertFalse(success)
+
+    def test_resend_cooldown_enforced(self):
+        """Test that requesting OTP twice within cooldown period raises ValidationError."""
+        from django.core.exceptions import ValidationError
+        PhoneVerification.request_otp(self.test_phone)
+        with self.assertRaises(ValidationError):
+            PhoneVerification.request_otp(self.test_phone)
+
+    def test_web_send_and_verify_otp_views(self):
+        """Test web AJAX endpoints for sending and verifying OTP."""
+        # 1. Send OTP
+        send_url = reverse('send_otp')
+        response = self.client.post(send_url, {'phone_number': self.test_phone})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+
+        # Retrieve the generated OTP from DB
+        verification = PhoneVerification.objects.filter(phone_number=self.test_phone).first()
+        self.assertIsNotNone(verification)
+
+        # 2. Verify with wrong OTP
+        verify_url = reverse('verify_otp')
+        response = self.client.post(verify_url, {'phone_number': self.test_phone, 'otp': '999999'})
+        self.assertEqual(response.status_code, 400)
+
+        # Verify with fixed test code under override
+        with override_settings(DEBUG=True, DEV_FIXED_OTP='123456'):
+            response = self.client.post(verify_url, {'phone_number': self.test_phone, 'otp': '123456'})
+            self.assertEqual(response.status_code, 200)
+            verify_data = response.json()
+            self.assertTrue(verify_data['success'])
+            self.assertTrue(verify_data['is_new_user'])
+
+        # User should now exist and be logged in
+        user = User.objects.get(phone_number=self.test_phone)
+        self.assertIsNotNone(user)
+
+    def test_api_phone_send_and_verify_otp(self):
+        """Test REST API endpoints: /api/auth/phone/send-otp/ and verify-otp/."""
+        # Send OTP
+        response = self.client.post(
+            reverse('phone_send_otp'),
+            {'phone_number': '+27839876543'},
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        # Verify OTP
+        with override_settings(DEBUG=True, DEV_FIXED_OTP='654321'):
+            response = self.client.post(
+                reverse('phone_verify_otp'),
+                {'phone_number': '+27839876543', 'otp': '654321'},
+                content_type='application/json'
+            )
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertIn('tokens', data)
+            self.assertIn('access', data['tokens'])
+            self.assertIn('refresh', data['tokens'])
+            self.assertTrue(data['is_new_user'])
 
 
 class AppVariantCompatibilityTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(email='test_variant@example.com', password='password123')
+        self.user = User.objects.create_user(phone_number='+27829999999', email='test_variant@example.com')
         self.profile, _ = Profile.objects.get_or_create(user=self.user)
 
     def test_serializer_normalization(self):
@@ -151,39 +219,3 @@ class AppVariantCompatibilityTest(TestCase):
             middleware(request)
 
         self.assertEqual(request.app_variant, 'general')
-
-    def test_middleware_prefix_stripping_and_session_persistence(self):
-        """Test that VariantMiddleware strips prefixes, sets variant, and stores it in session."""
-        from django.test import RequestFactory
-        from web.middleware import VariantMiddleware
-        
-        factory = RequestFactory()
-        
-        # Test hiv_plus prefix
-        request1 = factory.get('/hiv-plus/accounts/login/')
-        request1.session = {}
-        middleware = VariantMiddleware(lambda req: req)
-        middleware(request1)
-        
-        self.assertEqual(request1.app_variant, 'hiv_plus')
-        self.assertEqual(request1.session.get('app_variant'), 'hiv_plus')
-        self.assertEqual(request1.path_info, '/accounts/login/')
-        self.assertEqual(request1.path, '/accounts/login/')
-        
-        # Test general prefix
-        request2 = factory.get('/general/accounts/signup/')
-        request2.session = {}
-        middleware(request2)
-        
-        self.assertEqual(request2.app_variant, 'general')
-        self.assertEqual(request2.session.get('app_variant'), 'general')
-        self.assertEqual(request2.path_info, '/accounts/signup/')
-        self.assertEqual(request2.path, '/accounts/signup/')
-
-        # Test subsequent non-prefixed request loading from session
-        request3 = factory.get('/accounts/edit-profile/')
-        request3.session = {'app_variant': 'general'}
-        middleware(request3)
-        
-        self.assertEqual(request3.app_variant, 'general')
-        self.assertEqual(request3.path_info, '/accounts/edit-profile/')

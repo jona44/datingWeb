@@ -10,13 +10,13 @@ from django.shortcuts import get_object_or_404
 from datetime import date, datetime, timedelta
 import requests
 
-from accounts.models import User, Profile, ProfilePhoto
+from accounts.models import User, Profile, ProfilePhoto, PhoneVerification
 from discovery.models import Preference
 from interactions.models import Like, Match, Block, Report, Skip, ProfileView
 from messaging.models import Conversation, Message, MessageRead
 
 from .serializers import (
-    UserSerializer, UserRegistrationSerializer,
+    UserSerializer, UserRegistrationSerializer, PhoneSendOTPSerializer, PhoneVerifyOTPSerializer,
     ProfileListSerializer, ProfileDetailSerializer, ProfileUpdateSerializer,
     ProfilePhotoSerializer, PreferenceSerializer,
     LikeSerializer, MatchSerializer, BlockSerializer, ReportSerializer,
@@ -49,6 +49,88 @@ def get_geographic_metadata(request):
 
 
 # ==================== AUTHENTICATION VIEWS ====================
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def phone_send_otp(request):
+    """Send verification code via SMS to phone number"""
+    serializer = PhoneSendOTPSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    phone_number = serializer.validated_data['phone_number']
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    ip_address = x_forwarded_for.split(',')[0].strip() if x_forwarded_for else request.META.get('REMOTE_ADDR')
+
+    try:
+        from django.core.exceptions import ValidationError
+        from django.conf import settings
+        record, code = PhoneVerification.request_otp(phone_number, ip_address=ip_address)
+        return Response({
+            'detail': 'Verification code sent.',
+            'phone_number': phone_number,
+            'expires_in': getattr(settings, 'OTP_EXPIRATION_SECONDS', 300)
+        }, status=status.HTTP_200_OK)
+    except ValidationError as e:
+        return Response({'detail': e.message}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+    except Exception as e:
+        return Response({'detail': 'Unable to send verification code. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def phone_verify_otp(request):
+    """Verify OTP and return JWT tokens for authentication"""
+    serializer = PhoneVerifyOTPSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    phone_number = serializer.validated_data['phone_number']
+    code = serializer.validated_data['otp']
+
+    is_valid, msg = PhoneVerification.verify_otp(phone_number, code)
+    if not is_valid:
+        return Response({'detail': msg}, status=status.HTTP_400_BAD_REQUEST)
+
+    created = False
+    try:
+        user = User.objects.get(phone_number=phone_number)
+    except User.DoesNotExist:
+        user = User.objects.create_user(phone_number=phone_number)
+        created = True
+
+    # Enforce App Variant Isolation
+    import os
+    req_variant = getattr(request, 'app_variant', os.getenv('APP_VARIANT', 'hiv_plus'))
+    profile, _ = Profile.objects.get_or_create(user=user)
+
+    if not created and profile.app_variant and profile.app_variant != req_variant:
+        return Response({
+            'detail': 'Account registered for a different community variant.'
+        }, status=status.HTTP_403_FORBIDDEN)
+
+    if created:
+        profile.app_variant = req_variant
+        profile.save()
+
+    refresh = RefreshToken.for_user(user)
+    access_token = str(refresh.access_token)
+    refresh_token = str(refresh)
+
+    return Response({
+        'user': UserSerializer(user).data,
+        'tokens': {
+            'refresh': refresh_token,
+            'access': access_token,
+        },
+        'access': access_token,
+        'refresh': refresh_token,
+        'is_new_user': created,
+        'profile_complete': profile.is_complete,
+        'onboarding_step': profile.onboarding_step,
+    }, status=status.HTTP_200_OK)
+
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])

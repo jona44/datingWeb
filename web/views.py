@@ -109,7 +109,7 @@ def block_user_view(request, profile_id):
     target = get_object_or_404(Profile, id=profile_id)
     
     block_user(viewer, target)
-    messages.success(request, f"You have blocked {target.display_name|default:target.user.email}")
+    messages.success(request, f"You have blocked {target.display_name or str(target.user.phone_number)}")
     
     return redirect('discovery_feed')
 
@@ -117,7 +117,8 @@ def block_user_view(request, profile_id):
 @login_required
 def report_user_view(request, profile_id):
     """Report a user"""
-    from interactions.services import report_user
+    from interactions.services import report_user, block_user
+    from interactions.models import Report
     from django.contrib import messages
     
     viewer = get_profile_for_user(request.user)
@@ -128,11 +129,17 @@ def report_user_view(request, profile_id):
         description = request.POST.get('description', '')
         
         report_user(viewer, target, reason, description)
-        messages.success(request, "Thank you for your report. We'll review it shortly.")
+        
+        if request.POST.get('block_also') in ['on', '1', 'true', True]:
+            block_user(viewer, target)
+            messages.success(request, f"Thank you for your report. {target.display_name or 'The user'} has also been blocked.")
+        else:
+            messages.success(request, "Thank you for your report. We'll review it shortly.")
         return redirect('discovery_feed')
     
     return render(request, 'web/discovery/report.html', {
         'profile': target,
+        'reason_choices': Report.REASON_CHOICES,
     })
 
 

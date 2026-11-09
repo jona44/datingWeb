@@ -1,25 +1,124 @@
+import secrets
+import uuid
+from datetime import timedelta
+from django.conf import settings
+from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+from phonenumber_field.modelfields import PhoneNumberField
+
+from .constants import CITY_CHOICES, COUNTRY_CHOICES, ETHNICITY_CHOICES
 from .managers import UserManager
-from .constants import COUNTRY_CHOICES, CITY_CHOICES, ETHNICITY_CHOICES
-import uuid
+from .sms import get_sms_backend
 
 
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(unique=True)
+    phone_number = PhoneNumberField(unique=True, db_index=True)
+    email = models.EmailField(unique=True, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = 'phone_number'
     REQUIRED_FIELDS = []
 
     objects = UserManager()
 
     def __str__(self):
-        return self.email
+        return str(self.phone_number)
+
+
+class PhoneVerification(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    phone_number = PhoneNumberField(db_index=True)
+    otp_hash = models.CharField(max_length=128)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    attempts = models.PositiveSmallIntegerField(default=0)
+    is_verified = models.BooleanField(default=False)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['phone_number', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"OTP for {self.phone_number} (verified={self.is_verified})"
+
+    @classmethod
+    def generate_otp_code(cls):
+        fixed_dev_otp = getattr(settings, 'DEV_FIXED_OTP', None)
+        if settings.DEBUG and fixed_dev_otp:
+            return str(fixed_dev_otp)
+        return f"{secrets.randbelow(900000) + 100000}"
+
+    @classmethod
+    def request_otp(cls, phone_number, ip_address=None):
+        now = timezone.now()
+        cooldown_seconds = getattr(settings, 'OTP_RESEND_COOLDOWN_SECONDS', 60)
+        expiry_seconds = getattr(settings, 'OTP_EXPIRATION_SECONDS', 300)
+
+        recent = cls.objects.filter(
+            phone_number=phone_number,
+            created_at__gte=now - timedelta(seconds=cooldown_seconds)
+        ).first()
+        if recent:
+            elapsed = int((now - recent.created_at).total_seconds())
+            remaining = max(1, cooldown_seconds - elapsed)
+            raise ValidationError(f"Please wait {remaining} seconds before requesting a new code.")
+
+        code = cls.generate_otp_code()
+        otp_hash = make_password(code)
+        expires_at = now + timedelta(seconds=expiry_seconds)
+
+        record = cls.objects.create(
+            phone_number=phone_number,
+            otp_hash=otp_hash,
+            expires_at=expires_at,
+            ip_address=ip_address,
+        )
+
+        sms_backend = get_sms_backend()
+        message = f"Your verification code is {code}. It expires in {expiry_seconds // 60} minutes."
+        sms_backend.send_sms(str(phone_number), message)
+
+        return record, code
+
+    @classmethod
+    def verify_otp(cls, phone_number, code):
+        now = timezone.now()
+        max_attempts = getattr(settings, 'OTP_MAX_ATTEMPTS', 5)
+
+        record = cls.objects.filter(
+            phone_number=phone_number,
+            is_verified=False,
+            expires_at__gte=now
+        ).order_by('-created_at').first()
+
+        if not record:
+            return False, "Verification code has expired or was not requested. Please request a new one."
+
+        if record.attempts >= max_attempts:
+            return False, "Maximum verification attempts exceeded. Please request a new code."
+
+        record.attempts += 1
+        record.save(update_fields=['attempts'])
+
+        fixed_dev_otp = getattr(settings, 'DEV_FIXED_OTP', None)
+        is_fixed_match = settings.DEBUG and fixed_dev_otp and str(code) == str(fixed_dev_otp)
+
+        if check_password(code, record.otp_hash) or is_fixed_match:
+            record.is_verified = True
+            record.save(update_fields=['is_verified'])
+            return True, "Verification successful."
+
+        remaining = max_attempts - record.attempts
+        return False, f"Incorrect code. {remaining} attempt{'s' if remaining != 1 else ''} remaining."
 
 
 class Profile(models.Model):
@@ -35,7 +134,6 @@ class Profile(models.Model):
     GENDER_CHOICES = [
         ('male', 'Male'),
         ('female', 'Female'),
-
     ]
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES, null=True, blank=True)
     
@@ -163,7 +261,7 @@ class Profile(models.Model):
         return is_online(self.id)
 
     def __str__(self):
-        return self.display_name or self.user.email
+        return self.display_name or str(self.user.phone_number)
     
     def save(self, *args, **kwargs):
         # Update completeness percentage before saving
@@ -213,5 +311,3 @@ class ProfilePhoto(models.Model):
 
     def __str__(self):
         return f"Photo for {self.profile.display_name}"
-
-
