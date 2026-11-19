@@ -1,9 +1,9 @@
 # Linux VPS Deployment Guide
 
-**Target OS:** Ubuntu 22.04 / 24.04 LTS
+**Target OS:** Ubuntu 26.04 LTS (also works on 24.04 LTS)
 **Specs:** 4 CPU Cores, 8 GB RAM, 75 GB SSD
-**Database:** PostgreSQL 16
-**Cost:** ~R397/month
+**Database:** PostgreSQL (16 / 17)
+**Cost:** R470/month
 
 ---
 
@@ -26,13 +26,14 @@ Update system:
 sudo apt update && sudo apt upgrade -y
 ```
 
-Install all dependencies:
+Install all dependencies (including Node.js & npm for Tailwind CSS):
 ```bash
 sudo apt install -y \
   python3-venv python3-dev python3-pip \
   build-essential git \
   postgresql postgresql-contrib libpq-dev \
   redis-server \
+  nodejs npm \
   nginx \
   certbot python3-certbot-nginx \
   ufw
@@ -89,9 +90,9 @@ GRANT ALL PRIVILEGES ON DATABASE dating_db TO dating_user;
 
 ### Tune PostgreSQL for 8 GB RAM
 
-Edit the PostgreSQL config:
+Edit the PostgreSQL config (replace version number if different):
 ```bash
-sudo nano /etc/postgresql/16/main/postgresql.conf
+sudo nano /etc/postgresql/*/main/postgresql.conf
 ```
 Set these values:
 ```ini
@@ -171,7 +172,15 @@ nano .env
 > REDIS_URL=redis://localhost:6379/0
 > ALLOWED_HOSTS=your-domain.com,www.your-domain.com
 > SECRET_KEY=your-very-long-random-secret-key
+> ACCOUNT_DEFAULT_HTTP_PROTOCOL=https
 > ```
+
+Compile Tailwind CSS Assets:
+```bash
+# Build production CSS from theme source
+npm --prefix theme/static_src install
+npm --prefix theme/static_src run build
+```
 
 Run Migrations and Collect Static:
 ```bash
@@ -228,10 +237,14 @@ sudo systemctl status daphne
 
 ---
 
-## 8. Configure Systemd — Celery Workers
+## 8. Configure Systemd — Celery Workers (Optional)
 
+> **Note:** Daphne handles all WebSocket and HTTP traffic. Celery is only required if you implement background asynchronous worker tasks. If not using Celery yet, you can skip this step and proceed to Step 9 (Nginx).
+
+If using Celery:
 ```bash
-sudo nano /etc/systemd/system/celery.service
+sudo cp deployment/celery.service /etc/systemd/system/
+sudo cp deployment/celerybeat.service /etc/systemd/system/
 ```
 ```ini
 [Unit]

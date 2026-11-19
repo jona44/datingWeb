@@ -4,7 +4,6 @@ from pathlib import Path
 import os
 from urllib.parse import quote_plus
 import dj_database_url
-from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 
@@ -33,13 +32,6 @@ DEBUG = get_bool_env('DEBUG', False)
 
 allowed_hosts = os.getenv('ALLOWED_HOSTS', '')
 hosts = [h.strip() for h in allowed_hosts.split(',') if h.strip()] if allowed_hosts else []
-
-for host in [
-    os.getenv('RAILWAY_PUBLIC_DOMAIN'),
-    os.getenv('RAILWAY_PRIVATE_DOMAIN'),
-]:
-    if host:
-        hosts.append(host)
 
 LOCAL_ALLOWED_HOSTS = [
     'localhost',
@@ -80,12 +72,6 @@ CSRF_TRUSTED_ORIGINS.extend(
     for item in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
     if item.strip()
 )
-
-railway_public_domain = os.getenv('RAILWAY_PUBLIC_DOMAIN')
-if railway_public_domain:
-    CSRF_TRUSTED_ORIGINS.extend([
-        f'https://{railway_public_domain}',
-    ])
 
 
 # Application definition
@@ -195,12 +181,6 @@ def get_database_url():
             f"@{pg_host}:{pg_port}/{quote_plus(pg_database)}"
         )
 
-    if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RAILWAY_PROJECT_ID'):
-        raise ImproperlyConfigured(
-            "Railway deployment requires DATABASE_URL or all PGHOST, PGPORT, "
-            "PGDATABASE, PGUSER, and PGPASSWORD variables."
-        )
-
     return f"sqlite:///{(BASE_DIR / 'db.sqlite3').as_posix()}"
 
 
@@ -220,9 +200,6 @@ try:
         )
     }
 except Exception:
-    if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RAILWAY_PROJECT_ID'):
-        raise
-
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
