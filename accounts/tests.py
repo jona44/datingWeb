@@ -219,3 +219,52 @@ class AppVariantCompatibilityTest(TestCase):
             middleware(request)
 
         self.assertEqual(request.app_variant, 'general')
+
+
+class BulkSMSBackendTest(TestCase):
+    def test_send_sms_success(self):
+        from unittest.mock import patch, MagicMock
+        from accounts.sms import BulkSMSBackend
+
+        backend = BulkSMSBackend()
+        with patch.dict('os.environ', {'BULKSMS_TOKEN_ID': 'test_id', 'BULKSMS_TOKEN_SECRET': 'test_secret'}):
+            with patch('requests.post') as mock_post:
+                mock_resp = MagicMock()
+                mock_resp.status_code = 201
+                mock_resp.text = '{"id":"123"}'
+                mock_post.return_value = mock_resp
+
+                result = backend.send_sms('+27821234567', 'Your code is 123456')
+                self.assertTrue(result)
+                mock_post.assert_called_once_with(
+                    'https://api.bulksms.com/v1/messages',
+                    json={'to': '+27821234567', 'body': 'Your code is 123456'},
+                    auth=('test_id', 'test_secret'),
+                    headers={'Content-Type': 'application/json'},
+                    timeout=10
+                )
+
+    def test_send_sms_missing_credentials(self):
+        from unittest.mock import patch
+        from accounts.sms import BulkSMSBackend
+
+        backend = BulkSMSBackend()
+        with patch.dict('os.environ', {'BULKSMS_TOKEN_ID': '', 'BULKSMS_TOKEN_SECRET': ''}, clear=True):
+            result = backend.send_sms('+27821234567', 'Your code is 123456')
+            self.assertFalse(result)
+
+    def test_send_sms_api_failure(self):
+        from unittest.mock import patch, MagicMock
+        from accounts.sms import BulkSMSBackend
+
+        backend = BulkSMSBackend()
+        with patch.dict('os.environ', {'BULKSMS_TOKEN_ID': 'test_id', 'BULKSMS_TOKEN_SECRET': 'test_secret'}):
+            with patch('requests.post') as mock_post:
+                mock_resp = MagicMock()
+                mock_resp.status_code = 400
+                mock_resp.text = '{"detail": "Bad Request"}'
+                mock_post.return_value = mock_resp
+
+                result = backend.send_sms('+27821234567', 'Test message')
+                self.assertFalse(result)
+

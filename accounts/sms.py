@@ -106,6 +106,51 @@ class AfricasTalkingBackend(BaseSMSBackend):
             return False
 
 
+class BulkSMSBackend(BaseSMSBackend):
+    """
+    BulkSMS integration using JSON REST API v1.
+    Requires BULKSMS_TOKEN_ID and BULKSMS_TOKEN_SECRET environment variables.
+    Documentation: https://www.bulksms.com/developer/json/v1/
+    """
+    def send_sms(self, phone_number: str, message: str) -> bool:
+        token_id = os.getenv("BULKSMS_TOKEN_ID")
+        token_secret = os.getenv("BULKSMS_TOKEN_SECRET")
+
+        if not token_id or not token_secret:
+            logger.error("BulkSMS credentials not configured in environment variables (BULKSMS_TOKEN_ID, BULKSMS_TOKEN_SECRET).")
+            return False
+
+        # BulkSMS expects international MSISDN format (e.g. +27821234567 or 27821234567)
+        cleaned_phone = str(phone_number).strip().replace(" ", "").replace("-", "")
+
+        url = "https://api.bulksms.com/v1/messages"
+        headers = {
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "to": cleaned_phone,
+            "body": message,
+        }
+
+        try:
+            response = requests.post(
+                url,
+                json=payload,
+                auth=(token_id, token_secret),
+                headers=headers,
+                timeout=10,
+            )
+            if response.status_code in [200, 201]:
+                logger.info(f"BulkSMS dispatched successfully to {cleaned_phone}")
+                return True
+            else:
+                logger.error(f"BulkSMS failed ({response.status_code}): {response.text}")
+                return False
+        except Exception as exc:
+            logger.exception(f"Error calling BulkSMS API: {exc}")
+            return False
+
+
 def get_sms_backend() -> BaseSMSBackend:
     backend_path = getattr(settings, "SMS_BACKEND", "accounts.sms.ConsoleBackend")
     try:

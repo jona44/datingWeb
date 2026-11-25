@@ -88,7 +88,9 @@ FACEBOOK_CLIENT_ID=your-facebook-client-id
 FACEBOOK_CLIENT_SECRET=your-facebook-client-secret
 
 # SMS
-SMS_BACKEND=accounts.sms.ConsoleBackend
+SMS_BACKEND=accounts.sms.BulkSMSBackend
+# BULKSMS_TOKEN_ID=your-bulksms-token-id
+# BULKSMS_TOKEN_SECRET=your-bulksms-token-secret
 PHONENUMBER_DEFAULT_REGION=ZA
 OTP_EXPIRATION_SECONDS=300
 OTP_RESEND_COOLDOWN_SECONDS=60
