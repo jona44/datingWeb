@@ -1,6 +1,6 @@
 [Unit]
 Description=Daphne ASGI Server
-After=network.target postgresql.service redis.service
+After=network.target postgresql.service redis-server.service
 
 [Service]
 User=deploy
@@ -8,8 +8,9 @@ Group=deploy
 WorkingDirectory=/var/www/dating
 EnvironmentFile=/var/www/dating/.env
 ExecStart=/var/www/dating/env/bin/daphne \
-    -u /run/daphne/daphne.sock \
-    --workers 4 \
+    -b 127.0.0.1 \
+    -p 8000 \
+    --proxy-headers \
     core.asgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
@@ -17,3 +18,4 @@ RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
+
