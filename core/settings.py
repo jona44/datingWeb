@@ -191,11 +191,13 @@ default_database_url = get_database_url()
 if isinstance(default_database_url, bytes):
     default_database_url = default_database_url.decode('utf-8', errors='ignore')
 
+db_conn_max_age = int(os.getenv('DB_CONN_MAX_AGE', 0))
+
 try:
     DATABASES = {
         'default': dj_database_url.parse(
             default_database_url,
-            conn_max_age=600,
+            conn_max_age=db_conn_max_age,
             conn_health_checks=True,
         )
     }

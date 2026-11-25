@@ -14,7 +14,7 @@ shared_buffers = 2GB
 effective_cache_size = 6GB
 work_mem = 64MB
 maintenance_work_mem = 512MB
-max_connections = 100
+max_connections = 200
 wal_buffers = 64MB
 checkpoint_completion_target = 0.9
 max_worker_processes = 4
@@ -72,6 +72,7 @@ CSRF_TRUSTED_ORIGINS=http://102.208.228.164,https://102.208.228.164
 
 # Database & Cache
 DATABASE_URL=postgresql://dating_user:DatingSecure_2026_x9Qv7!@localhost:5432/dating_db
+DB_CONN_MAX_AGE=0
 REDIS_URL=redis://127.0.0.1:6379/1
 
 # Authentication & Application Variants
