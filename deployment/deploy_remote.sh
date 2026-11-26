@@ -67,8 +67,8 @@ cat << 'EOF' > /var/www/dating/.env
 # Django Production Settings
 DEBUG=False
 SECRET_KEY=prod-sec-9f82k4b92h58v104n285g93b8274g2958h2
-ALLOWED_HOSTS=102.208.228.164,localhost,127.0.0.1,hivplus.local,diversehearts.local,*
-CSRF_TRUSTED_ORIGINS=http://102.208.228.164,https://102.208.228.164
+ALLOWED_HOSTS=102.208.228.164,localhost,127.0.0.1,lovebyte.online,www.lovebyte.online,loveplus.online,www.loveplus.online,hivplus.local,diversehearts.local,*
+CSRF_TRUSTED_ORIGINS=http://102.208.228.164,https://102.208.228.164,http://lovebyte.online,https://lovebyte.online,http://www.lovebyte.online,https://www.lovebyte.online,http://loveplus.online,https://loveplus.online,http://www.loveplus.online,https://www.loveplus.online
 
 # Database & Cache
 DATABASE_URL=postgresql://dating_user:DatingSecure_2026_x9Qv7!@localhost:5432/dating_db
@@ -78,8 +78,8 @@ REDIS_URL=redis://127.0.0.1:6379/1
 # Authentication & Application Variants
 ACCOUNT_DEFAULT_HTTP_PROTOCOL=http
 APP_VARIANT=hiv_plus
-HIV_PLUS_DOMAIN=hivplus.local
-GENERAL_DOMAIN=diversehearts.local
+HIV_PLUS_DOMAIN=loveplus.online,www.loveplus.online,hivplus.local
+GENERAL_DOMAIN=lovebyte.online,www.lovebyte.online,diversehearts.local
 
 # Social Auth
 GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
@@ -153,7 +153,7 @@ upstream daphne {
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
-    server_name 102.208.228.164 _;
+    server_name 102.208.228.164 lovebyte.online www.lovebyte.online loveplus.online www.loveplus.online _;
 
     client_max_body_size 20M;
 

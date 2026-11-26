@@ -18,9 +18,9 @@ class VariantMiddleware:
             return None
 
         value = variant.strip().lower()
-        if value in {'diversehearts', 'diverse-hearts', 'general'}:
+        if value in {'diversehearts', 'diverse-hearts', 'general', 'lovebyte', 'love-byte'}:
             return 'general'
-        if value in {'hivplus', 'hiv-plus', 'hiv_plus'}:
+        if value in {'hivplus', 'hiv-plus', 'hiv_plus', 'loveplus', 'love-plus'}:
             return 'hiv_plus'
         return value
 
@@ -70,14 +70,14 @@ class VariantMiddleware:
         path_parts = path_info.lstrip('/').split('/', 1)
         first_segment = path_parts[0]
 
-        if first_segment in {'hiv-plus', 'hiv_plus'}:
+        if first_segment in {'hiv-plus', 'hiv_plus', 'loveplus', 'love-plus'}:
             prefix_variant = 'hiv_plus'
             prefix_stripped = True
-        elif first_segment in {'diverse-hearts', 'diversehearts', 'general'}:
+        elif first_segment in {'diverse-hearts', 'diversehearts', 'general', 'lovebyte', 'love-byte'}:
             prefix_variant = 'general'
             prefix_stripped = True
 
-        if header_variant in ('hiv_plus', 'general', 'diversehearts', 'hivplus', 'hiv-plus', 'diverse-hearts'):
+        if header_variant in ('hiv_plus', 'general', 'diversehearts', 'hivplus', 'hiv-plus', 'diverse-hearts', 'lovebyte', 'loveplus'):
             # Header always wins — update session so web views stay consistent too
             request.app_variant = self._normalize_variant(header_variant)
             if hasattr(request, 'session'):
@@ -100,9 +100,9 @@ class VariantMiddleware:
             domain_variant = self._variant_for_host(host)
             if domain_variant:
                 request.app_variant = domain_variant
-            elif any(marker in host for marker in ('diversehearts', 'general', 'diverse-hearts')):
+            elif any(marker in host for marker in ('diversehearts', 'general', 'diverse-hearts', 'lovebyte')):
                 request.app_variant = 'general'
-            elif any(marker in host for marker in ('hivplus', 'hiv-plus')):
+            elif any(marker in host for marker in ('hivplus', 'hiv-plus', 'loveplus')):
                 request.app_variant = 'hiv_plus'
             else:
                 # Fall back to session (useful for web users who navigated via prefix before)

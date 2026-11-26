@@ -17,6 +17,14 @@ if ($content -notmatch '(?m)^\s*127\.0\.0\.1\s+hivplus\.local') {
 if ($content -notmatch '(?m)^\s*127\.0\.0\.1\s+diversehearts\.local') {
     $entriesToAdd += "127.0.0.1    diversehearts.local"
 }
+if ($content -notmatch '(?m)^\s*127\.0\.0\.1\s+loveplus\.online') {
+    $entriesToAdd += "127.0.0.1    loveplus.online"
+    $entriesToAdd += "127.0.0.1    www.loveplus.online"
+}
+if ($content -notmatch '(?m)^\s*127\.0\.0\.1\s+lovebyte\.online') {
+    $entriesToAdd += "127.0.0.1    lovebyte.online"
+    $entriesToAdd += "127.0.0.1    www.lovebyte.online"
+}
 
 if ($entriesToAdd.Count -eq 0) {
     Write-Host "Hostnames are already configured in $hostsPath!" -ForegroundColor Green

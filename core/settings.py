@@ -40,6 +40,10 @@ LOCAL_ALLOWED_HOSTS = [
     '192.168.88.244',
     'hivplus.local',
     'diversehearts.local',
+    'lovebyte.online',
+    'www.lovebyte.online',
+    'loveplus.online',
+    'www.loveplus.online',
 ]
 
 ALLOWED_HOSTS = hosts or LOCAL_ALLOWED_HOSTS
@@ -47,12 +51,12 @@ ALLOWED_HOSTS = hosts or LOCAL_ALLOWED_HOSTS
 APP_VARIANT_DOMAINS = {
     'hiv_plus': [
         host.strip()
-        for host in os.getenv('HIV_PLUS_DOMAIN', '').split(',')
+        for host in os.getenv('HIV_PLUS_DOMAIN', 'loveplus.online,www.loveplus.online,hivplus.local').split(',')
         if host.strip()
     ],
     'general': [
         host.strip()
-        for host in os.getenv('GENERAL_DOMAIN', '').split(',')
+        for host in os.getenv('GENERAL_DOMAIN', 'lovebyte.online,www.lovebyte.online,diversehearts.local').split(',')
         if host.strip()
     ],
 }
@@ -66,6 +70,14 @@ CSRF_TRUSTED_ORIGINS = [
     "http://diversehearts.local:8000",
     "http://hivplus.local",
     "http://diversehearts.local",
+    "http://lovebyte.online",
+    "https://lovebyte.online",
+    "http://www.lovebyte.online",
+    "https://www.lovebyte.online",
+    "http://loveplus.online",
+    "https://loveplus.online",
+    "http://www.loveplus.online",
+    "https://www.loveplus.online",
 ]
 CSRF_TRUSTED_ORIGINS.extend(
     item.strip()

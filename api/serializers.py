@@ -286,8 +286,10 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
             data = data.copy()
         else:
             data = dict(data)
-        if 'app_variant' in data and data['app_variant'] == 'diversehearts':
+        if 'app_variant' in data and data['app_variant'] in ('diversehearts', 'lovebyte'):
             data['app_variant'] = 'general'
+        elif 'app_variant' in data and data['app_variant'] in ('hivplus', 'loveplus'):
+            data['app_variant'] = 'hiv_plus'
         return super().to_internal_value(data)
 
 
