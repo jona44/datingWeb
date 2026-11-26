@@ -39,8 +39,8 @@ Write-Host "Flushing DNS resolver cache..." -ForegroundColor Cyan
 ipconfig /flushdns | Out-Null
 
 Write-Host "`nSetup complete! You can now access:" -ForegroundColor Green
-Write-Host "  - http://hivplus.local:8000        (HIV+ Community variant)" -ForegroundColor White
-Write-Host "  - http://diversehearts.local:8000 (Diverse Hearts variant)`n" -ForegroundColor White
+Write-Host "  - http://hivplus.local:8000        (GetLovePlus variant)" -ForegroundColor White
+Write-Host "  - http://diversehearts.local:8000 (LoveByte variant)`n" -ForegroundColor White
 
 Write-Host "Press any key to close..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

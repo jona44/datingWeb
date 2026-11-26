@@ -44,6 +44,9 @@ LOCAL_ALLOWED_HOSTS = [
     'www.lovebyte.online',
     'loveplus.online',
     'www.loveplus.online',
+    'getloveplus.online',
+    'www.getloveplus.online',
+    'getloveplus.local',
 ]
 
 ALLOWED_HOSTS = hosts or LOCAL_ALLOWED_HOSTS
@@ -51,7 +54,7 @@ ALLOWED_HOSTS = hosts or LOCAL_ALLOWED_HOSTS
 APP_VARIANT_DOMAINS = {
     'hiv_plus': [
         host.strip()
-        for host in os.getenv('HIV_PLUS_DOMAIN', 'loveplus.online,www.loveplus.online,hivplus.local').split(',')
+        for host in os.getenv('HIV_PLUS_DOMAIN', 'getloveplus.online,www.getloveplus.online,loveplus.online,www.loveplus.online,hivplus.local,getloveplus.local').split(',')
         if host.strip()
     ],
     'general': [
@@ -70,6 +73,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://diversehearts.local:8000",
     "http://hivplus.local",
     "http://diversehearts.local",
+    "http://getloveplus.local:8000",
+    "http://getloveplus.local",
     "http://lovebyte.online",
     "https://lovebyte.online",
     "http://www.lovebyte.online",
@@ -78,6 +83,10 @@ CSRF_TRUSTED_ORIGINS = [
     "https://loveplus.online",
     "http://www.loveplus.online",
     "https://www.loveplus.online",
+    "http://getloveplus.online",
+    "https://getloveplus.online",
+    "http://www.getloveplus.online",
+    "https://www.getloveplus.online",
 ]
 CSRF_TRUSTED_ORIGINS.extend(
     item.strip()

@@ -10,7 +10,7 @@ def brand_context(request):
     if variant == 'hiv_plus':
         return {
             'app_variant': variant,
-            'brand_name': 'HIV+ Community',
+            'brand_name': 'GetLovePlus',
             'brand_primary': 'pink-600',
             'brand_primary_hover': 'pink-700',
             'brand_primary_hex': '#FF0080',
@@ -22,12 +22,12 @@ def brand_context(request):
     else:
         return {
             'app_variant': variant,
-            'brand_name': 'Diverse Hearts',
+            'brand_name': 'LoveByte',
             'brand_primary': 'indigo-600',
             'brand_primary_hover': 'indigo-700',
             'brand_primary_hex': '#4F46E5',
             'brand_gradient': 'from-indigo-600 to-teal-800',
             'brand_logo': 'images/diversehearts-icon.svg',
             'brand_tagline': 'A meaningful space for diverse souls to connect, share experiences, and find love',
-            'brand_about': 'Finding someone who truly resonates with your journey can be a path of its own. Diverse Hearts is dedicated to fostering deep connections in a respectful and inclusive environment, helping you find those who appreciate the real you.',
+            'brand_about': 'Finding someone who truly resonates with your journey can be a path of its own. LoveByte is dedicated to fostering deep connections in a respectful and inclusive environment, helping you find those who appreciate the real you.',
         }

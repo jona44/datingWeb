@@ -236,8 +236,8 @@ class Profile(models.Model):
     
     # Profile Status
     APP_VARIANT_CHOICES = [
-        ('hiv_plus', 'HIV+ Community'),
-        ('general', 'Diverse Hearts'),
+        ('hiv_plus', 'GetLovePlus'),
+        ('general', 'LoveByte'),
     ]
     app_variant = models.CharField(
         max_length=20, 

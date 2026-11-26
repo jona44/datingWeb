@@ -179,10 +179,10 @@ class AppVariantCompatibilityTest(TestCase):
         self.profile, _ = Profile.objects.get_or_create(user=self.user)
 
     def test_serializer_normalization(self):
-        """Test that ProfileUpdateSerializer maps 'diversehearts' to 'general'."""
+        """Test that ProfileUpdateSerializer maps 'diversehearts' and 'lovebyte' to 'general', and 'getloveplus' to 'hiv_plus'."""
         from api.serializers import ProfileUpdateSerializer
         data = {
-            'app_variant': 'diversehearts',
+            'app_variant': 'lovebyte',
             'display_name': 'Test Normalization'
         }
         serializer = ProfileUpdateSerializer(instance=self.profile, data=data, partial=True)
@@ -190,17 +190,29 @@ class AppVariantCompatibilityTest(TestCase):
         profile = serializer.save()
         self.assertEqual(profile.app_variant, 'general')
 
+        data_plus = {
+            'app_variant': 'getloveplus',
+            'display_name': 'Test GetLovePlus'
+        }
+        serializer_plus = ProfileUpdateSerializer(instance=self.profile, data=data_plus, partial=True)
+        self.assertTrue(serializer_plus.is_valid(), serializer_plus.errors)
+        profile_plus = serializer_plus.save()
+        self.assertEqual(profile_plus.app_variant, 'hiv_plus')
+
     def test_middleware_normalization(self):
-        """Test that VariantMiddleware maps X-App-Variant: diversehearts header to general."""
+        """Test that VariantMiddleware maps X-App-Variant: lovebyte to general and getloveplus to hiv_plus."""
         from django.test import RequestFactory
         from web.middleware import VariantMiddleware
         factory = RequestFactory()
-        request = factory.get('/api/profiles/me/', HTTP_X_APP_VARIANT='diversehearts')
+        request = factory.get('/api/profiles/me/', HTTP_X_APP_VARIANT='lovebyte')
         
         middleware = VariantMiddleware(lambda req: req)
         middleware(request)
-        
         self.assertEqual(request.app_variant, 'general')
+
+        request_plus = factory.get('/api/profiles/me/', HTTP_X_APP_VARIANT='getloveplus')
+        middleware(request_plus)
+        self.assertEqual(request_plus.app_variant, 'hiv_plus')
 
     def test_middleware_uses_configured_domain_mapping(self):
         """Test that VariantMiddleware uses configured hostnames for each variant."""

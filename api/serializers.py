@@ -288,7 +288,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
             data = dict(data)
         if 'app_variant' in data and data['app_variant'] in ('diversehearts', 'lovebyte'):
             data['app_variant'] = 'general'
-        elif 'app_variant' in data and data['app_variant'] in ('hivplus', 'loveplus'):
+        elif 'app_variant' in data and data['app_variant'] in ('hivplus', 'loveplus', 'getloveplus'):
             data['app_variant'] = 'hiv_plus'
         return super().to_internal_value(data)
 
