@@ -141,6 +141,15 @@ class BulkSMSBackend(BaseSMSBackend):
                 timeout=10,
             )
             if response.status_code in [200, 201]:
+                data = response.json()
+                if isinstance(data, list) and len(data) > 0:
+                    status_info = data[0].get("status", {})
+                    if status_info.get("type") == "FAILED":
+                        logger.error(
+                            f"BulkSMS rejected message to {cleaned_phone} with status "
+                            f"{status_info.get('id')}: {data}"
+                        )
+                        return False
                 logger.info(f"BulkSMS dispatched successfully to {cleaned_phone}")
                 return True
             else:
