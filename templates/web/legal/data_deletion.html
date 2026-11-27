@@ -1,52 +1,92 @@
 {% extends "base.html" %}
 
-{% block title %}Data Deletion Instructions - Dating App{% endblock %}
+{% block title %}Account & Data Deletion - {{ brand_name }}{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto py-12 px-4">
     <div class="bg-white rounded-2xl shadow-sm border p-8 md:p-12">
-        <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">Data Deletion Instructions</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-4 text-center">Account & Data Deletion Request</h1>
+        <p class="text-gray-600 text-center mb-8 max-w-2xl mx-auto">
+            At <strong>{{ brand_name }}</strong>, you have complete ownership and control over your personal data. Below are instructions and options to delete your account and all associated personal data.
+        </p>
         
-        <div class="prose prose-pink max-w-none text-gray-600 space-y-6">
-            <p class="text-lg leading-relaxed text-center">
-                We value your privacy and give you full control over your data.
-            </p>
-
-            <section class="bg-pink-50 rounded-xl p-6 border border-pink-100">
-                <h2 class="text-xl font-semibold text-pink-700 mb-4">How to Delete Your Data</h2>
-                <p class="text-pink-900 mb-4">
-                    If you wish to delete your account and all associated data, follow these simple steps:
+        <div class="space-y-8 text-gray-700">
+            <!-- Option 1: In-App Deletion -->
+            <section class="bg-gray-50 rounded-2xl p-6 md:p-8 border border-gray-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-8 h-8 rounded-full bg-{{ brand_primary }} text-white font-bold flex items-center justify-center text-sm">1</span>
+                    <h2 class="text-xl font-bold text-gray-900">Delete Directly From the App / Website</h2>
+                </div>
+                <p class="mb-4 text-sm md:text-base">
+                    If you are logged in, you can delete your account immediately with real-time confirmation:
                 </p>
-                <ol class="list-decimal list-inside space-y-2 text-pink-900">
-                    <li>Log in to your account.</li>
-                    <li>Navigate to the <strong>Settings</strong> page.</li>
-                    <li>Scroll to the bottom of the page.</li>
-                    <li>Click the <strong>"Delete Account"</strong> button.</li>
+                <ol class="list-decimal list-inside space-y-2 mb-6 text-sm md:text-base font-medium">
+                    <li>Open <strong>{{ brand_name }}</strong> (on mobile or web) and navigate to <strong>Profile / Settings</strong>.</li>
+                    <li>Scroll down to the <strong>Danger Zone / Delete Account</strong> section.</li>
+                    <li>Click <strong>"Delete My Account"</strong> and confirm your choice.</li>
                 </ol>
+                {% if user.is_authenticated %}
+                <a href="{% url 'settings' %}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition shadow-sm">
+                    Go to Account Settings to Delete
+                </a>
+                {% endif %}
             </section>
 
-            <section>
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">What Happens After Deletion?</h2>
-                <p>
-                    When you delete your account:
+            <!-- Option 2: Web Request Form / Email Deletion -->
+            <section class="bg-gray-50 rounded-2xl p-6 md:p-8 border border-gray-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-8 h-8 rounded-full bg-{{ brand_primary }} text-white font-bold flex items-center justify-center text-sm">2</span>
+                    <h2 class="text-xl font-bold text-gray-900">Request Deletion via Web / Email (Without Logging In)</h2>
+                </div>
+                <p class="mb-4 text-sm md:text-base">
+                    If you have uninstalled the application or cannot access your account, you can request that our compliance team manually purge your account and all associated data:
                 </p>
-                <ul class="list-disc list-inside space-y-2">
-                    <li>Your profile is immediately removed from the discovery feed.</li>
-                    <li>All your matches and conversations are permanently deleted.</li>
-                    <li>Your personal information (name, email, age, etc.) is scrubbed from our database.</li>
-                    <li>Any uploaded photos are removed from our storage.</li>
-                </ul>
-                <p class="mt-4 italic">
-                    Note: This action is permanent and cannot be undone.
-                </p>
+                <div class="bg-white rounded-xl p-5 border border-gray-200 space-y-3">
+                    <p class="text-sm">
+                        Send an email with the subject line <strong>"Account Deletion Request - {{ brand_name }}"</strong> to:
+                    </p>
+                    <a href="mailto:support@lovebyte.online?subject=Account%20and%20Data%20Deletion%20Request%20-%20{{ brand_name }}&body=Please%20delete%20my%20account%20and%20all%20associated%20data%20from%20{{ brand_name }}.%0A%0ARegistered%20Phone%20Number%20or%20Email:%20" 
+                       class="inline-block text-lg font-bold text-{{ brand_primary }} hover:underline">
+                        support@lovebyte.online
+                    </a>
+                    <p class="text-xs text-gray-500">
+                        Please include the phone number or email address associated with your account so we can verify and fulfill your request. Manual requests are processed within 48 to 72 hours.
+                    </p>
+                </div>
             </section>
 
-            <section>
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Questions?</h2>
-                <p>
-                    If you have any trouble deleting your data or have questions about our data retention policies, please reach out to us at <a href="mailto:support@datingapp.com" class="text-pink-600 font-medium">support@datingapp.com</a>.
-                </p>
+            <!-- Data Retention & Deletion Details -->
+            <section class="space-y-4">
+                <h2 class="text-xl font-bold text-gray-900">What Data is Deleted?</h2>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="border rounded-xl p-5 bg-red-50/50 border-red-100">
+                        <h3 class="font-bold text-red-900 mb-2 flex items-center gap-2">
+                            <span>🗑️</span> Permanently Deleted Immediately:
+                        </h3>
+                        <ul class="text-sm text-red-800 space-y-1.5 list-disc list-inside">
+                            <li>Profile data (name, bio, age, location, preferences)</li>
+                            <li>All uploaded profile photos and media files</li>
+                            <li>Matches, likes, skips, and mutual interactions</li>
+                            <li>Chat messages and conversation history</li>
+                            <li>Push notification tokens & device credentials</li>
+                        </ul>
+                    </div>
+                    <div class="border rounded-xl p-5 bg-blue-50/50 border-blue-100">
+                        <h3 class="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                            <span>📋</span> Data Retention Policy:
+                        </h3>
+                        <ul class="text-sm text-blue-800 space-y-1.5 list-disc list-inside">
+                            <li>We do not retain personal identifying records after deletion.</li>
+                            <li>Security logs may retain anonymized event timestamps for up to 30 days to prevent fraud and comply with statutory requirements, after which they are permanently overwritten.</li>
+                        </ul>
+                    </div>
+                </div>
             </section>
+
+            <!-- Confirmation note -->
+            <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs md:text-sm">
+                <strong>Important Note:</strong> Deleting your account is permanent. Once deleted, your account cannot be recovered or restored.
+            </div>
         </div>
     </div>
 </div>
